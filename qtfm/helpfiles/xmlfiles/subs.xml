@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<!DOCTYPE function SYSTEM "qtfmfunction.dtd">
+<function name = "subs" overload = "both">
+<short>Substitute terms within symbolic quaternion equation(s)</short>
+<syntax>S = subs(expr, old, new)</syntax>
+<long>
+    <para>
+        <code>S = subs(expr, old, new)</code> replaces all instances of the
+        quaternion variable <code>old</code> with the quaternion variable
+        <code>new</code> in <code>expr</code>, which must be a symbolic
+        expression created from a quaternion expression (it's class will be
+        'sym').
+    </para>
+</long>
+<examples>
+</examples>
+<seealso>
+<matlabfun name = "subs"/>
+</seealso>
+</function>
+
+<!--$Id: subs.xml 1155 2022-10-13 09:55:58Z sangwine $-->

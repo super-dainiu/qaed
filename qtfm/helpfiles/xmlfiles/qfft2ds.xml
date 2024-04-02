@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<!DOCTYPE function SYSTEM "qtfmfunction.dtd">
+<function name = "qfft2ds/iqfft2ds" overload = "false">
+<short>Two-Sided Quaternion Fast Fourier transform</short>
+<syntax>Y = qfft2ds(X, A)</syntax>
+<long>
+<para>
+<code>qfft2ds(X, A)</code> computes a two-sided Quaternion Fast Fourier Transform
+of the quaternion matrix <code>X</code> using transform axis pair <code>A</code>
+(direction in 3-space).
+</para>
+<para>
+The transform axis pair, <code>A</code> must be a cell array of two elements
+which are pure quaternions (real or complex).
+They need not have unit modulus (although the transform itself
+is computed using a unit-modulus axis, so that the axis is a root of -1).
+</para>
+    <para>
+        The transform computed by this function is a slight generalization
+        of that of Ell (1992)., which had fixed transform axes of <bold>j</bold>
+        and <bold>k</bold> for the left and right exponentials. The related
+        function <code>fft2ds</code> provides the default axes of Ell's
+        original transform.
+    </para>
+<para>
+This function is computed by fast Fourier transforms.
+The related function <code>qdft2ds</code> computes the same result by a
+    much slower discrete Fourier transform. It is provided for test and
+    verification purposes (the result is less accurate than the fast transform
+    code, but it should differ by only small multiples of the machine rounding).
+</para>
+    <para>
+        The inverse function is <code>iqfft2ds</code> and it has the same calling
+        profile. It differs however, in applying a scale factor of 1/N where
+        N is the number of elements in the array <code>X</code> (the product
+        of the number of rows and the number of columns).
+    </para>
+</long>
+<seealso>
+<qtfmfun name = "fft2ds"/>
+<qtfmfun name = "qdft2ds"/>
+</seealso>
+<references>
+<reference>
+T. A. Ell, 'Hypercomplex spectral transformations', Ph.D. thesis,
+University of Minnesota, 1992.
+</reference>
+<reference>
+Sangwine, S. J., 'Fourier transforms of colour images using quaternion,
+or hypercomplex, numbers', <italic>Electronics Letters</italic>,
+<bold>32</bold>(21), October 10 1996, 1979–80. <doi>10.1049/el:19961331</doi>.
+</reference>
+</references>
+</function>
+
+<!--$Id: qfft2ds.xml 1168 2022-11-20 19:07:25Z sangwine $-->

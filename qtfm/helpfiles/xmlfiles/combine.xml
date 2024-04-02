@@ -1,0 +1,27 @@
+﻿<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<!DOCTYPE function SYSTEM "qtfmfunction.dtd">
+<function name = "combine" overload = "both">
+<short>Combine terms of identical algbraic structure within coefficients of quaternion or octonion</short>
+<syntax>Y = combine(S, T)</syntax>
+<long>
+    <para>This function requires the &matlab; Symbolic Math Toolbox.</para>
+    <para>
+        <code>combine</code> works by application of the &matlab;
+        function of the same name to each component of the quaternion or octonion
+        <code>S</code>. It accepts the same parameter profiles as the
+        overloaded &matlab; function.
+    </para>
+</long>
+<seealso>
+<qtfmfun name = "assumeAlso"/>
+<qtfmfun name = "assume"/>
+<qtfmfun name = "assumptions"/>
+<qtfmfun name = "collect"/>
+<qtfmfun name = "expand"/>
+<qtfmfun name = "rewrite"/>
+<qtfmfun name = "simplify"/>
+<matlabfun name = "combine"/>
+</seealso>
+</function>
+
+<!--$Id: combine.xml 1123 2021-08-13 19:20:15Z sangwine $-->

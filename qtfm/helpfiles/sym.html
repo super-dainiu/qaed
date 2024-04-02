@@ -1,0 +1,52 @@
+<!-- Generated automatically from an XML file of the same name.
+     © Stephen J. Sangwine and Nicolas Le Bihan, 2008-2022.
+--><html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+   <title>sym :: Functions (Quaternion Toolbox Function Reference)
+</title><link rel="stylesheet" href="qtfmstyle.css" type="text/css"></head><body><h1>Quaternion Function Reference</h1><h2>sym</h2>
+<p>Construct symbolic quaternion or octonion<br>(Quaternion and octonion overloadings of standard MATLAB&reg; function)
+</p>
+<h2>Syntax</h2><p><tt>Y = sym(X)</tt></p>
+<h2>Description</h2>
+<p>
+<tt>sym(X)</tt> constructs a quaternion or octonion with symbolic components from
+the quaternion <tt>X</tt>. It is an overloading of the MATLAB&reg; function
+of the same name implemented by a common mechanism for quaternion functions
+that can be computed by separate application of the MATLAB&reg; function to
+each component of the quaternion array. Examples of application are given
+below.
+</p>
+
+<h2>Examples</h2>
+<pre>
+&gt;&gt; p = sym(qi)
+ 
+p = 1 * I + 0 * J + 0 * K
+ 
+&gt;&gt; class(p)
+
+ans = 'quaternion'
+
+&gt;&gt; class(p.x)
+
+ans = 'sym'
+</pre>
+<pre>
+&gt;&gt; sym(randq)
+ 
+ans = (4209920399838119/4503599627370496) +
+      (-6095902275197935/36028797018963968) * I +
+      (-3266816872732743/36028797018963968) * J +
+      (-5383832095605575/18014398509481984) * K
+ 
+&gt;&gt; normq(ans)
+ 
+ans = 649037107316853512198686983106539/649037107316853453566312041152512
+ 
+&gt;&gt; eval(ans)
+
+ans = 1
+</pre>
+
+<h2>See Also</h2>MATLAB&reg; function: <a href="matlab:doc sym">sym</a><br>
+<h4>&copy; 2008-2022 Stephen J. Sangwine and Nicolas Le Bihan</h4><p><a href="license.html">License terms.</a></p></body></html>

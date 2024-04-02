@@ -1,0 +1,73 @@
+<!-- Generated automatically from an XML file of the same name.
+     © Stephen J. Sangwine and Nicolas Le Bihan, 2008-2022.
+--><html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+   <title>solve :: Functions (Quaternion Toolbox Function Reference)
+</title><link rel="stylesheet" href="qtfmstyle.css" type="text/css"></head><body><h1>Quaternion Function Reference</h1><h2>solve</h2>
+<p>Solve symbolic quaternion equation(s)<br>(Quaternion and octonion overloadings of standard MATLAB&reg; function)
+</p>
+<h2>Syntax</h2><p><tt>S = solve(eqn, var)</tt></p>
+<h2>Description</h2>
+<p>
+    <tt>solve(eqn, var)</tt> solves the symbolic quaternion equation
+    <tt>eqn</tt> for the quaternion variable <tt>var</tt>.
+</p>
+<p>
+    To see how to construct <tt>eqn</tt> refer to the documentation for
+    the overloaded Matlab&reg; function. (The quaternion function operates
+    by solving the system of four equations in real or complex variables
+    which corresponds to the quaternion equation.)
+</p>
+<p>
+    At present the function cannot handle a system of quaternion equations
+    as the overloaded Matlab&reg; function does. This may be added later.
+</p>
+
+<h2>Examples</h2>
+    Here we see <tt>solve</tt> finding the solution to a monomial with
+    one term. The solution can easily be seen to be <tt>x = a^-1 * c * b^-1</tt>, but
+    <tt>solve</tt> finds this by working with the equation in component
+    form, as a set of four equations.
+<pre>
+&gt;&gt; syms aw ax ay az bw bx by bz cw cx cy cz xw xx xy xz
+&gt;&gt; a = quaternion(aw, ax, ay, az);
+&gt;&gt; b = quaternion(bw, bx, by, bz);
+&gt;&gt; c = quaternion(cw, cx, cy, cz);
+&gt;&gt; x = quaternion(xw, xx, xy, xz);
+&gt;&gt; eqn = a * x * b == c
+ 
+eqn = - bw*(ax*xx - aw*xw + ay*xy + az*xz)
+      - bx*(aw*xx + ax*xw + ay*xz - az*xy)
+      - by*(aw*xy + ay*xw - ax*xz + az*xx)
+      - bz*(aw*xz + ax*xy - ay*xx + az*xw) == cw &amp; 
+        bw*(aw*xx + ax*xw + ay*xz - az*xy)
+      - bx*(ax*xx - aw*xw + ay*xy + az*xz)
+      - by*(aw*xz + ax*xy - ay*xx + az*xw)
+      + bz*(aw*xy + ay*xw - ax*xz + az*xx) == cx &amp;
+        bw*(aw*xy + ay*xw - ax*xz + az*xx)
+      + bx*(aw*xz + ax*xy - ay*xx + az*xw)
+      - by*(ax*xx - aw*xw + ay*xy + az*xz)
+      - bz*(aw*xx + ax*xw + ay*xz - az*xy) == cy &amp;
+        bw*(aw*xz + ax*xy - ay*xx + az*xw)
+      - bx*(aw*xy + ay*xw - ax*xz + az*xx)
+      + by*(aw*xx + ax*xw + ay*xz - az*xy)
+      - bz*(ax*xx - aw*xw + ay*xy + az*xz) == cz
+ 
+&gt;&gt; r = solve(eqn, x)
+
+r =  ((aw*bw*cw + aw*bx*cx + ax*bw*cx - ax*bx*cw + aw*by*cy .... (LONG)
+
+&gt;&gt; r - a^-1 * c * b^-1
+
+ans = ((aw*bw*cw + aw*bx*cx + ax*bw*cx - ax*bx*cw + aw*by*cy .... (LONG)
+
+&gt;&gt; simplify(ans)
+
+ans =  0 + 0 * I + 0 * J + 0 * K
+</pre>
+    The final result shows that <tt>r</tt> is indeed equal to the solution
+    stated above because the difference between the two, 
+    after simplification, is zero.
+
+<h2>See Also</h2>MATLAB&reg; function: <a href="matlab:doc solve">solve</a><br>
+<h4>&copy; 2008-2022 Stephen J. Sangwine and Nicolas Le Bihan</h4><p><a href="license.html">License terms.</a></p></body></html>

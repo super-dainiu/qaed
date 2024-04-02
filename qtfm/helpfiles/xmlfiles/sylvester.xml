@@ -1,0 +1,30 @@
+﻿<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<!DOCTYPE function SYSTEM "qtfmfunction.dtd">
+<function name = "sylvester" overload = "true">
+<short>Solve Sylvester's equation ax + xb = c</short>
+<syntax>x = sylvester(a, b, c)</syntax>
+<long>
+<para>
+    This function solves for <code>x</code>. The first two parameters must
+    be of the same size. The function works for real and complex quaternions.
+</para>
+    <para>
+        It is possible for there to be no solution (singular case). If so,
+        the return result will be NaNs.
+    </para>
+</long>
+<seealso>
+<matlabfun name = "sylvester"/>
+</seealso>
+<references>
+    <reference>
+        Drahoslava Janovska and Gerhard Opfer,
+        'Linear equations in quaternionic variables',
+        <italic>Mitteilungen der Mathematischen Gesellschaft in Hamburg</italic>,
+        <bold>27</bold>, (2008),
+        223–234, Section 2. Available: <www>https://www.math.uni-hamburg.de/mathges/</www>
+    </reference>
+</references>  
+</function>
+
+<!--$Id: sylvester.xml 1069 2020-04-19 21:09:49Z sangwine $-->

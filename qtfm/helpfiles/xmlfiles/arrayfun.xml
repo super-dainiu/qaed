@@ -1,0 +1,22 @@
+﻿<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<!DOCTYPE function SYSTEM "qtfmfunction.dtd">
+<function name = "arrayfun" overload = "both">
+<short>Apply a function to each element of an array</short>
+<syntax>Y = arrayfun(f, X)</syntax>
+<long>
+<para>
+Only one calling syntax is at present implemented (as above). The function
+handle <code>f</code> identifies a function which must work with a single
+quaternion or
+octonion parameter and return a single quaternion or octonion result. This
+function is appled to every element of <code>X</code> to yield the
+corresponding element of the result <code>Y</code> which will have the 
+same size as <code>X</code>.
+</para>
+</long>
+<seealso>
+<matlabfun name = "arrayfun"/>
+</seealso>
+</function>
+
+<!--$Id: arrayfun.xml 1083 2020-06-08 20:37:53Z sangwine $-->

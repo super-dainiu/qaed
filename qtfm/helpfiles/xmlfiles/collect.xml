@@ -1,0 +1,27 @@
+﻿<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<!DOCTYPE function SYSTEM "qtfmfunction.dtd">
+<function name = "collect" overload = "both">
+<short>Collect coefficients.</short>
+<syntax>C = collect(P, expr)</syntax>
+<long>
+    <para>This function requires the &matlab; Symbolic Math Toolbox.</para>
+    <para>
+        <code>collect</code> collects coefficients of each component of its
+        quaternion or octonion parameter <code>expr</code> by application of the &matlab;
+        function of the same name to each component of the quaternion or octonion <code>P</code>.
+        It accepts the same parameter profiles as the overloaded &matlab; function.
+    </para>
+</long>
+<seealso>
+<qtfmfun name = "assumeAlso"/>
+<qtfmfun name = "assume"/>
+<qtfmfun name = "assumptions"/>
+<qtfmfun name = "combine"/>
+<qtfmfun name = "expand"/>
+<qtfmfun name = "rewrite"/>
+<qtfmfun name = "simplify"/>
+<matlabfun name = "collect"/>
+</seealso>
+</function>
+
+<!--$Id: collect.xml 1123 2021-08-13 19:20:15Z sangwine $-->

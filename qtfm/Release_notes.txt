@@ -1,0 +1,95 @@
+--------------------------------------------------------------
+                Quaternion toolbox for Matlab
+                http://qtfm.sourceforge.net/
+       Mailing list: qtfm-announce@lists.sourceforge.net
+--------------------------------------------------------------
+Copyright © 2005-2022 Stephen J. Sangwine & Nicolas Le Bihan
+Email: sangwine@users.sourceforge.net
+       nicolas.le-bihan@gipsa-lab.inpg.fr
+--------------------------------------------------------------
+
+                     Release Notes
+
+Version 3.4 21 November 2022
+
+Six new functions have been added for computing two-sided quaternion FFTs.
+These are FFT2DS, QFFT2DS, QDTF2DS, and their inverses (prefixed with I).
+Test code has been added for these new functions.
+
+Version 3.3 14 October 2022
+
+New functions SUBS and SOLVE have been added, overloading the Symbolic
+Toolbox functions of the same names. An example script has been added to
+demonstrate the capability of SOLVE and SUBS on the quaternion Sylvester
+equation.
+
+Version 3.2 8 September 2022
+
+The function DISPLAY has been removed from the toolbox. According to
+current Mathworks advice (Code Analyzer) it should not be overloaded.
+Removing it means that the built-in DISPLAY function is called when needed,
+and this then calls the overloaded quaternion or octonion DISP function as
+appropriate.
+
+The functions ISDIVISOR and ISNILPOTENT now work for symbolic quaternions
+and octonions.
+
+A bug in the pivoting code in the LU decomposition has been fixed. The
+candidate pivot values were wrongly taken from the diagonal below and
+including A(j,j) rather than from the column below and including A(j,j).
+Fixing this bug has resolved an issue in the test code, which manifested as
+failures with complex octonion matrices, but could in fact have affected
+any quaternion or octonion matrix. The bug came to light when working on
+the Clifford Toolbox for MATLAB with algebras of large dimension (because
+this increased the chance of a large out of tolerance error in the test
+code). Since the LU code is common to this toolbox and the complex octonion
+case was a known problem, it was possible to work out where the problem was
+occurring.
+
+The quaternion INV function has been modified to recover from Infs or NaNs
+in intermediate results, by attempting to use adjoint matrices (isomorphic
+real or complex matrices). If this works, a correct result will now be
+returned, otherwise the result will, as before, still contain Infs or Nans.
+A test case has been added to the test code.
+
+Version 3.1  31 August 2021
+
+With this release, we have extended the symbolic capability to octonions.
+However, this should be regarded as experimental at this stage.
+ 
+Some incremental improvements have been made to the quaternion symbolic
+capability to improve output. The handling of undefined axis values has
+been centralised in a new private function in order to permit functions
+that have to handle undefined axis to work with symbolic arguments.
+
+New symbolic functions implemented: sym.
+
+Version 3.0  20 July 2020
+
+The toolbox now supports some symbolic computation with quaternions,
+provided that the MATLAB Symbolic Math Toolbox is installed (if it isn't
+the numeric functionality of QTFM should not be affected, but obviously
+the symbolic functions won't work). Test code is provided, but it will run
+only if the Symbolic Math Toolbox is detected (after the numeric tests have
+completed). Symbolic computation with octonions is not implemented in this
+release, but is intended to be provided in a later release. An example
+script is included in the /examples directory. See also the help
+documentation and the test code, which carries out some theorem proving
+tests that exercise the symbolic code in a non-trivial way.
+
+The sylvester function, introduced in QTFM 2.5, has been re-coded to use a
+direct quaternion algorithm by Janovska and Opfer.
+
+The function arrayfun is now implemented (overloading of standard Matlab
+function). It operates by a fairly crude method of iterating over the array
+elements and is therefore not expected to be fast.
+
+All source code files should now be in UTF-8 encoding (this is now the
+standard file encoding for MATLAB .m files).
+
+
+(For earlier release notes see version 2.8 which was the version preceding
+version 3.0, or see earlier versions of this file in the Sourceforge SVN
+repository - or the CVS repository for very old versions.)
+
+$Id: Release_notes.txt 1168 2022-11-20 19:07:25Z sangwine $

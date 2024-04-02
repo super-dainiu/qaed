@@ -1,0 +1,52 @@
+﻿<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<!DOCTYPE function SYSTEM "qtfmfunction.dtd">
+<function name = "sym" overload = "both">
+<short>Construct symbolic quaternion or octonion</short>
+<syntax>Y = sym(X)</syntax>
+<long>
+<para>
+<code>sym(X)</code> constructs a quaternion or octonion with symbolic components from
+the quaternion <code>X</code>. It is an overloading of the &matlab; function
+of the same name implemented by a common mechanism for quaternion functions
+that can be computed by separate application of the &matlab; function to
+each component of the quaternion array. Examples of application are given
+below.
+</para>
+</long>
+<examples>
+<precode>
+>> p = sym(qi)
+ 
+p = 1 * I + 0 * J + 0 * K
+ 
+>> class(p)
+
+ans = 'quaternion'
+
+>> class(p.x)
+
+ans = 'sym'
+</precode>
+<precode>
+>> sym(randq)
+ 
+ans = (4209920399838119/4503599627370496) +
+      (-6095902275197935/36028797018963968) * I +
+      (-3266816872732743/36028797018963968) * J +
+      (-5383832095605575/18014398509481984) * K
+ 
+>> normq(ans)
+ 
+ans = 649037107316853512198686983106539/649037107316853453566312041152512
+ 
+>> eval(ans)
+
+ans = 1
+</precode>
+</examples>
+<seealso>
+<matlabfun name = "sym"/>
+</seealso>
+</function>
+
+<!--$Id: sym.xml 1123 2021-08-13 19:20:15Z sangwine $-->

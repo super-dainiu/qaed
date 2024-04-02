@@ -1,0 +1,49 @@
+<!-- Generated automatically from an XML file of the same name.
+     © Stephen J. Sangwine and Nicolas Le Bihan, 2008-2022.
+--><html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+   <title>qdft2ds/iqdft2ds :: Functions (Quaternion Toolbox Function Reference)
+</title><link rel="stylesheet" href="qtfmstyle.css" type="text/css"></head><body><h1>Quaternion Function Reference</h1><h2>qdft2ds/iqdft2ds</h2>
+<p>Two-Sided Quaternion Discrete Fourier transform</p>
+<h2>Syntax</h2><p><tt>Y = qdft2ds(X, A)</tt></p>
+<h2>Description</h2>
+<p>
+<tt>qdft2ds(X, A)</tt> computes a two-sided Quaternion Discrete Fourier Transform
+of the quaternion matrix <tt>X</tt> using transform axis pair <tt>A</tt>
+(direction in 3-space).
+</p>
+<p>
+The transform axis pair, <tt>A</tt> must be a cell array of two elements
+which are pure quaternions (real or complex).
+They need not have unit modulus (although the transform itself
+is computed using a unit-modulus axis, so that the axis is a root of -1).
+</p>
+    <p>
+        The transform computed by this function is a slight generalization
+        of that of Ell (1992)., which had fixed transform axes of <b>j</b>
+        and <b>k</b> for the left and right exponentials. The related
+        function <tt>fft2ds</tt> provides the default axes of Ell's
+        original transform.
+    </p>
+<p>
+This function is computed by a rather slow direct evaluation of the QDFT.
+The related function <tt>qfft2ds</tt> computes the same result much faster.
+</p>
+    <p>
+        The inverse function is <tt>iqdft2ds</tt> and it has the same calling
+        profile. It differs however, in applying a scale factor of 1/N where
+        N is the number of elements in the array <tt>X</tt> (the product
+        of the number of rows and the number of columns).
+    </p>
+
+<h2>See Also</h2>QTFM functions: <a href="fft2ds.html">fft2ds</a>, <a href="qfft2ds.html">qfft2ds</a><br>
+<h2>References</h2><ol><li>
+T. A. Ell, 'Hypercomplex spectral transformations', Ph.D. thesis,
+University of Minnesota, 1992.
+</li><li>
+Sangwine, S. J., 'Fourier transforms of colour images using quaternion,
+or hypercomplex, numbers', <i>Electronics Letters</i>,
+<b>32</b>(21), October 10 1996, 1979&#8211;80. 
+DOI: <a href="http://dx.doi.org/10.1049/el:19961331">10.1049/el:19961331</a>.
+</li></ol>
+<h4>&copy; 2008-2022 Stephen J. Sangwine and Nicolas Le Bihan</h4><p><a href="license.html">License terms.</a></p></body></html>

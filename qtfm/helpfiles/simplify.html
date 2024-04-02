@@ -1,0 +1,40 @@
+<!-- Generated automatically from an XML file of the same name.
+     © Stephen J. Sangwine and Nicolas Le Bihan, 2008-2022.
+--><html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+   <title>simplify :: Functions (Quaternion Toolbox Function Reference)
+</title><link rel="stylesheet" href="qtfmstyle.css" type="text/css"></head><body><h1>Quaternion Function Reference</h1><h2>simplify</h2>
+<p>Simplify symbolic quaternion or octonion<br>(Quaternion and octonion overloadings of standard MATLAB&reg; function)
+</p>
+<h2>Syntax</h2><p><tt>S = simplify(expr, varargin)</tt></p>
+<h2>Description</h2>
+    <p>This function requires the MATLAB&reg; Symbolic Math Toolbox.</p>
+<p>
+<tt>simplify</tt> applies algebraic simplification to each component of
+the quaternion or octonion <tt>expr</tt>.
+It accepts the same parameter profiles as the overloaded MATLAB&reg; function.
+</p>
+<p>
+<tt>simplify</tt> will return a pure quaternion or octonion expression when
+it can prove that the scalar part is identically zero, or a scalar
+expression (not a quaternion or octonion) when it can prove that the vector
+part is identically zero.
+</p>
+
+<h2>Examples</h2>
+<pre>
+&gt;&gt; mu = unit(quaternion('x', 'y', 'z'))
+ 
+mu = (x/(x^2 + y^2 + z^2)^(1/2)) * I + (y/(x^2 + y^2 + z^2)^(1/2)) * J + (z/(x^2 + y^2 + z^2)^(1/2)) * K
+ 
+&gt;&gt; mu^2
+ 
+ans =  - x^2/(x^2 + y^2 + z^2) - y^2/(x^2 + y^2 + z^2) - z^2/(x^2 + y^2 + z^2)
+ 
+&gt;&gt; simplify(ans)
+ 
+ans =  -1
+</pre>
+
+<h2>See Also</h2>MATLAB&reg; function: <a href="matlab:doc simplify">simplify</a><br>QTFM functions: <a href="assume.html">assume</a>, <a href="assumeAlso.html">assumeAlso</a>, <a href="assumptions.html">assumptions</a>, <a href="collect.html">collect</a>, <a href="combine.html">combine</a>, <a href="expand.html">expand</a>, <a href="rewrite.html">rewrite</a><br>
+<h4>&copy; 2008-2022 Stephen J. Sangwine and Nicolas Le Bihan</h4><p><a href="license.html">License terms.</a></p></body></html>

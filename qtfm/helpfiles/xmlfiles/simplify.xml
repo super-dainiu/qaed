@@ -1,0 +1,47 @@
+﻿<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<!DOCTYPE function SYSTEM "qtfmfunction.dtd">
+<function name = "simplify" overload = "both">
+<short>Simplify symbolic quaternion or octonion</short>
+<syntax>S = simplify(expr, varargin)</syntax>
+<long>
+    <para>This function requires the &matlab; Symbolic Math Toolbox.</para>
+<para>
+<code>simplify</code> applies algebraic simplification to each component of
+the quaternion or octonion <code>expr</code>.
+It accepts the same parameter profiles as the overloaded &matlab; function.
+</para>
+<para>
+<code>simplify</code> will return a pure quaternion or octonion expression when
+it can prove that the scalar part is identically zero, or a scalar
+expression (not a quaternion or octonion) when it can prove that the vector
+part is identically zero.
+</para>
+</long>
+<examples>
+<precode>
+>> mu = unit(quaternion('x', 'y', 'z'))
+ 
+mu = (x/(x^2 + y^2 + z^2)^(1/2)) * I + (y/(x^2 + y^2 + z^2)^(1/2)) * J + (z/(x^2 + y^2 + z^2)^(1/2)) * K
+ 
+>> mu^2
+ 
+ans =  - x^2/(x^2 + y^2 + z^2) - y^2/(x^2 + y^2 + z^2) - z^2/(x^2 + y^2 + z^2)
+ 
+>> simplify(ans)
+ 
+ans =  -1
+</precode>
+</examples>
+<seealso>
+<qtfmfun name = "assume"/>
+<qtfmfun name = "assumeAlso"/>
+<qtfmfun name = "assumptions"/>
+<qtfmfun name = "collect"/>
+<qtfmfun name = "combine"/>
+<qtfmfun name = "expand"/>
+<qtfmfun name = "rewrite"/>
+<matlabfun name = "simplify"/>
+</seealso>
+</function>
+
+<!--$Id: simplify.xml 1123 2021-08-13 19:20:15Z sangwine $-->

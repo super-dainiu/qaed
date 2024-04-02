@@ -1,0 +1,27 @@
+﻿<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<!DOCTYPE function SYSTEM "qtfmfunction.dtd">
+<function name = "assumptions" overload = "both">
+<short>Show assumptions on components of symbolic quaternion or octonion.</short>
+<syntax>assumptions(q)</syntax>
+<long>
+    <para>This function requires the &matlab; Symbolic Math Toolbox.</para>
+    <para>
+        <code>assumptions</code> lists assumptions that apply to each component of
+        the quaternion or octonion <code>q</code>.
+        See the documentation on the &matlab; function of the same name to see
+        how it is used.
+    </para>
+</long>
+<seealso>
+<qtfmfun name = "assumeAlso"/>
+<qtfmfun name = "assume"/>
+<qtfmfun name = "collect"/>
+<qtfmfun name = "combine"/>
+<qtfmfun name = "expand"/>
+<qtfmfun name = "rewrite"/>
+<qtfmfun name = "simplify"/>
+<matlabfun name = "assumptions"/>
+</seealso>
+</function>
+
+<!--$Id: assumptions.xml 1123 2021-08-13 19:20:15Z sangwine $-->

@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<!DOCTYPE function SYSTEM "qtfmfunction.dtd">
+<function name = "expand" overload = "both">
+<short>Expand expressions</short>
+<syntax>Y = expand(S)</syntax>
+<long>
+    <para>This function requires the &matlab; Symbolic Math Toolbox.</para>
+    <para>
+        <code>expand</code> works by application of the &matlab;
+        function of the same name to each component of the quaternion or octonion
+        <code>S</code>. It accepts the same parameter profiles as the
+        overloaded &matlab; function.
+    </para>
+</long>
+<seealso>
+<matlabfun name = "expand"/>
+</seealso>
+</function>
+
+<!--$Id: expand.xml 1123 2021-08-13 19:20:15Z sangwine $-->

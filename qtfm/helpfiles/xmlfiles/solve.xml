@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<!DOCTYPE function SYSTEM "qtfmfunction.dtd">
+<function name = "solve" overload = "both">
+<short>Solve symbolic quaternion equation(s)</short>
+<syntax>S = solve(eqn, var)</syntax>
+<long>
+<para>
+    <code>solve(eqn, var)</code> solves the symbolic quaternion equation
+    <code>eqn</code> for the quaternion variable <code>var</code>.
+</para>
+<para>
+    To see how to construct <code>eqn</code> refer to the documentation for
+    the overloaded Matlab&reg; function. (The quaternion function operates
+    by solving the system of four equations in real or complex variables
+    which corresponds to the quaternion equation.)
+</para>
+<para>
+    At present the function cannot handle a system of quaternion equations
+    as the overloaded Matlab&reg; function does. This may be added later.
+</para>
+</long>
+<examples>
+    Here we see <code>solve</code> finding the solution to a monomial with
+    one term. The solution can easily be seen to be <code>x = a^-1 * c * b^-1</code>, but
+    <code>solve</code> finds this by working with the equation in component
+    form, as a set of four equations.
+<precode>
+>> syms aw ax ay az bw bx by bz cw cx cy cz xw xx xy xz
+>> a = quaternion(aw, ax, ay, az);
+>> b = quaternion(bw, bx, by, bz);
+>> c = quaternion(cw, cx, cy, cz);
+>> x = quaternion(xw, xx, xy, xz);
+>> eqn = a * x * b == c
+ 
+eqn = - bw*(ax*xx - aw*xw + ay*xy + az*xz)
+      - bx*(aw*xx + ax*xw + ay*xz - az*xy)
+      - by*(aw*xy + ay*xw - ax*xz + az*xx)
+      - bz*(aw*xz + ax*xy - ay*xx + az*xw) == cw &amp; 
+        bw*(aw*xx + ax*xw + ay*xz - az*xy)
+      - bx*(ax*xx - aw*xw + ay*xy + az*xz)
+      - by*(aw*xz + ax*xy - ay*xx + az*xw)
+      + bz*(aw*xy + ay*xw - ax*xz + az*xx) == cx &amp;
+        bw*(aw*xy + ay*xw - ax*xz + az*xx)
+      + bx*(aw*xz + ax*xy - ay*xx + az*xw)
+      - by*(ax*xx - aw*xw + ay*xy + az*xz)
+      - bz*(aw*xx + ax*xw + ay*xz - az*xy) == cy &amp;
+        bw*(aw*xz + ax*xy - ay*xx + az*xw)
+      - bx*(aw*xy + ay*xw - ax*xz + az*xx)
+      + by*(aw*xx + ax*xw + ay*xz - az*xy)
+      - bz*(ax*xx - aw*xw + ay*xy + az*xz) == cz
+ 
+>> r = solve(eqn, x)
+
+r =  ((aw*bw*cw + aw*bx*cx + ax*bw*cx - ax*bx*cw + aw*by*cy .... (LONG)
+
+>> r - a^-1 * c * b^-1
+
+ans = ((aw*bw*cw + aw*bx*cx + ax*bw*cx - ax*bx*cw + aw*by*cy .... (LONG)
+
+>> simplify(ans)
+
+ans =  0 + 0 * I + 0 * J + 0 * K
+</precode>
+    The final result shows that <code>r</code> is indeed equal to the solution
+    stated above because the difference between the two, 
+    after simplification, is zero.
+</examples>
+<seealso>
+<matlabfun name = "solve"/>
+</seealso>
+</function>
+
+<!--$Id: solve.xml 1155 2022-10-13 09:55:58Z sangwine $-->

@@ -1,0 +1,28 @@
+﻿<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<!DOCTYPE function SYSTEM "qtfmfunction.dtd">
+<function name = "eval" overload = "both">
+<short>Evaluate symbolic quaternion or octonion</short>
+<syntax>eval(expr)</syntax>
+<long>
+    <para>This function requires the &matlab; Symbolic Math Toolbox.</para>
+    <para>
+        <code>eval</code> evaluates the given expression. The meaning of the
+        term 'evaluate' seems to vary. It will sometimes mean converting to
+        a numeric value, sometime it seems to do nothing. See the documentation
+        for the overloaded &matlab; function.
+    </para>
+</long>
+<seealso>
+<qtfmfun name = "assume"/>
+<qtfmfun name = "assumeAlso"/>
+<qtfmfun name = "assumptions"/>
+<qtfmfun name = "collect"/>
+<qtfmfun name = "combine"/>
+<qtfmfun name = "expand"/>
+<qtfmfun name = "rewrite"/>
+<qtfmfun name = "simplify"/>
+<matlabfun name = "eval"/>
+</seealso>
+</function>
+
+<!--$Id: eval.xml 1123 2021-08-13 19:20:15Z sangwine $-->

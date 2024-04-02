@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<!DOCTYPE function SYSTEM "qtfmfunction.dtd">
+<function name = "fft2ds/ifft2ds" overload = "false">
+<short>Two-Sided Quaternion Fast Fourier transform</short>
+<syntax>Y = fft2ds(X)</syntax>
+<long>
+<para>
+<code>fft2ds(X)</code> computes a two-sided Quaternion Fast Fourier Transform
+    of the quaternion matrix <code>X</code> using the transform axis pair <bold>j</bold>
+    and <bold>k</bold> for the left and right exponentials respectively.
+</para>
+    <para>
+        The transform computed by this function is exactly that 
+        of Ell (1992). The related
+        function <code>qfft2ds</code> allows user-specified transform axes.
+    </para>
+<para>
+This function is computed by fast Fourier transforms.
+</para>
+    <para>
+        The inverse function is <code>ifft2ds</code> and it has the same calling
+        profile. It differs however, in applying a scale factor of 1/N where
+        N is the number of elements in the array <code>X</code> (the product
+        of the number of rows and the number of columns).
+    </para>
+</long>
+<seealso>
+<qtfmfun name = "qfft2ds"/>
+<qtfmfun name = "qdft2ds"/>
+</seealso>
+<references>
+<reference>
+T. A. Ell, 'Hypercomplex spectral transformations', Ph.D. thesis,
+University of Minnesota, 1992.
+</reference>
+<reference>
+Sangwine, S. J., 'Fourier transforms of colour images using quaternion,
+or hypercomplex, numbers', <italic>Electronics Letters</italic>,
+<bold>32</bold>(21), October 10 1996, 1979–80. <doi>10.1049/el:19961331</doi>.
+</reference>
+</references>
+</function>
+
+<!--$Id: fft2ds.xml 1168 2022-11-20 19:07:25Z sangwine $-->

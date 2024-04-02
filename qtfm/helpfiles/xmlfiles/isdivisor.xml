@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<!DOCTYPE function SYSTEM "qtfmfunction.dtd">
+<function name = "isdivisor" overload = "false">
+<short>Array elements that are divisors of zero</short>
+<syntax>TF = isdivisor(X, tol)</syntax>
+<long>
+<para>
+<code>isdivisor(X, tol)</code> returns logical 1 (<code>true</code>) for array
+elements that are divisors of zero. This function works for quaternions and
+octonions (the reference below covered only the former, but the results
+hold for octonions).
+</para>
+<para>
+    The second parameter specifies a tolerance.
+    If omitted the default is <code>eps</code>.
+    The tolerance parameter is ignored if <code>X</code> is symbolic.
+    </para>
+</long>
+    <references>
+        <reference>
+            Stephen J. Sangwine and Daniel Alfsmann,
+            'Determination of the Biquaternion Divisors of Zero, Including the
+            Idempotents and Nilpotents', <italic>Advances in Applied Clifford Algebras</italic>, <bold>20</bold>,
+            (2010), 401–410. <doi>10.1007/s00006-010-0202-3</doi>.
+        </reference>
+</references>
+</function>
+
+<!--$Id: isdivisor.xml 1138 2022-02-13 20:59:56Z sangwine $-->

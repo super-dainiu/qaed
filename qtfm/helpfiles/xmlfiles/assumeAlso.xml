@@ -1,0 +1,25 @@
+﻿<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<!DOCTYPE function SYSTEM "qtfmfunction.dtd">
+<function name = "assumeAlso" overload = "both">
+<short>Add assumptions on symbolic quaternion or octonion.</short>
+<syntax>assumeAlso(expr, varargin)</syntax>
+<long>
+    <para>This function requires the &matlab; Symbolic Math Toolbox.</para>
+    <para>
+        <code>assumeAlso</code> adds an assumption on each component of its
+        quaternion or octonion parameter <code>expr</code>.
+    </para>
+</long>
+<seealso>
+<qtfmfun name = "assume"/>
+<qtfmfun name = "assumptions"/>
+<qtfmfun name = "collect"/>
+<qtfmfun name = "combine"/>
+<qtfmfun name = "expand"/>
+<qtfmfun name = "rewrite"/>
+<qtfmfun name = "simplify"/>
+<matlabfun name = "assumeAlso"/>
+</seealso>
+</function>
+
+<!--$Id: assumeAlso.xml 1123 2021-08-13 19:20:15Z sangwine $-->
