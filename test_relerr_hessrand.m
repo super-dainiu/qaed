@@ -25,5 +25,5 @@ err = norm(A - B, 'fro') / max(norm(A, 'fro'), norm(B, 'fro'));
 end
 
 function err = vec_err(A, P, D)
-err = norm(A * P - P * D, 'fro') / (norm(A, 'fro') + norm(D, 'fro')) * norm(P, 'fro');
+err = norm(A * P - P * D, 'fro') / ((norm(A, 'fro') + norm(D, 'fro')) * norm(P, 'fro'));
 end
