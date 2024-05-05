@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=fullrand_cpu
-#SBATCH --output=fullrand.txt
+#SBATCH --output=fullrand_cont.txt
 #SBATCH --ntasks=1
 #SBATCH --time=7-00:00:00
 #SBATCH --cpus-per-task=20

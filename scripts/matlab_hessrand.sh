@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=hessrand_cpu
-#SBATCH --output=hessrand.txt
+#SBATCH --output=hessrand_cont.txt
 #SBATCH --ntasks=1
 #SBATCH --time=7-00:00:00
 #SBATCH --cpus-per-task=20
