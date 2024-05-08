@@ -27,11 +27,11 @@ def draw_upper_triangular_matrix_with_triangular_sylvester(n, square_size, step=
     ax.axis('off')
     
     plt.tight_layout()
-    plt.savefig(f'assets/sylvester_{step}.pdf', bbox_inches='tight')
+    plt.savefig(f'assets/sylvester_{n}_{step}.pdf', bbox_inches='tight')
     plt.close()
 
 # Usage
-n = 30
+n = 8
 square_size = 1
-for step in range(0, n):
+for step in range(0, n+1):
     draw_upper_triangular_matrix_with_triangular_sylvester(n, square_size, step)
