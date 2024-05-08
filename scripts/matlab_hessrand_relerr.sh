@@ -8,4 +8,4 @@
 #SBATCH --partition=day
 module purge
 module load MATLAB/2023a
-matlab -nodisplay -nosplash -nodesktop -r "run('/home/ys792/qaed/test_relerr_hessrand.m');exit;"
+matlab -nodisplay -nosplash -nodesktop -r "run('/home/ys792/project/qaed/test_relerr_hessrand.m');exit;"
