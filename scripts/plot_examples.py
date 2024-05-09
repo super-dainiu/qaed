@@ -101,7 +101,7 @@ def draw_sylvester_solve(n, square_size):
 # Usage
 n = 10
 square_size = 1
-# for step in range(0, n+1):
-#     draw_upper_triangular_matrix_with_triangular_sylvester(n, square_size, step)
+for step in range(0, n+1):
+    draw_upper_triangular_matrix_with_triangular_sylvester(n, square_size, step)
 
 draw_sylvester_solve(n, square_size)
