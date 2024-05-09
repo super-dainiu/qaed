@@ -61,7 +61,24 @@ def draw_sylvester_solve(n, square_size):
     ax.axis('off')
 
     plt.tight_layout()
-    plt.savefig(f'assets/sylvester_solve_{n}_rhs.pdf', bbox_inches='tight')
+    plt.savefig(f'assets/sylvester_solve_{n}_rhs_u.pdf', bbox_inches='tight')
+    plt.close()
+
+
+    fig, ax = plt.subplots(figsize=(5, 5))
+
+    for i in range(n-1):
+        square = plt.Rectangle((0, i), square_size, square_size, fc='green', ec='black')
+        ax.add_patch(square)
+
+    ax.set_xlim(0, 1)
+    ax.set_ylim(0, n-1)
+    ax.set_aspect('equal')
+    ax.invert_yaxis()
+    ax.axis('off')
+
+    plt.tight_layout()
+    plt.savefig(f'assets/sylvester_solve_{n}_solution.pdf', bbox_inches='tight')
     plt.close()
 
     fig, ax = plt.subplots(figsize=(5, 5))
@@ -76,7 +93,7 @@ def draw_sylvester_solve(n, square_size):
     ax.axis('off')
 
     plt.tight_layout()
-    plt.savefig(f'assets/sylvester_solve_{n}_solution.pdf', bbox_inches='tight')
+    plt.savefig(f'assets/sylvester_solve_{n}_rhs_l.pdf', bbox_inches='tight')
     plt.close()
     
     
