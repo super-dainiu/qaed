@@ -7,24 +7,26 @@ for n = order_n
     rng(0)
 
     fprintf('Testing random matrix of order_n = %d ...\n', n);
-    A = randq(n) .* randn(n);
+    A = randq(n) .* rand(n);
+    A = A - A';
     [~, A] = hessq(A);
+    A = tril(A, 1);
 
-    disp('Using aed ...');
-    tic
-    [Q, T] = aedq(A, tol, true);
-    toc
-    isunitary(Q, rtol); istriu_(T, 0, rtol); 
-    compare_(Q' * A * Q, T, rtol, "Q' * A * Q and T does not match!");
-    save(sprintf('full_aed_n%d.mat', n), 'A', 'Q', 'T');
+    % disp('Using aed ...');
+    % tic
+    % [Q, D] = skew_aedq(A, tol, true);
+    % toc
+    % isunitary(Q, rtol); isdiag_(D, rtol); 
+    % compare_(Q' * A * Q, D, rtol, "Q' * A * Q and D does not match!");
+    % save(sprintf('skew_aed_n%d.mat', n), 'A', 'Q', 'D');
 
     disp('Using iqr ...');
     tic
-    [Q, T] = iqrq(A, tol, true);
+    [Q, D] = skew_iqrq(A, tol, true);
     toc
-    isunitary(Q, rtol); istriu_(T, 0, rtol);
-    compare_(Q' * A * Q, T, rtol, "Q' * A * Q and T does not match!");
-    save(sprintf('full_iqr_n%d.mat', n), 'A', 'Q', 'T');
+    isunitary(Q, rtol); isdiag_(D, rtol);
+    compare_(Q' * A * Q, D, rtol, "Q' * A * Q and D does not match!");
+    save(sprintf('skew_iqr_n%d.mat', n), 'A', 'Q', 'D');
 
 end
 

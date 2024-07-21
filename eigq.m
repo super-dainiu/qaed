@@ -16,8 +16,8 @@ function [P, D] = eigq(A, rtol, verbose, progress_bar)
 %
 %
 % The function first checks if A can be reduced to a tridiagonal matrix.
-% For tridiagonal matrices, it chooses between the `tridiag_qr` and
-% `tridiag_aed` algorithms based on the size of A. For non-tridiagonal
+% For tridiagonal matrices, it chooses between the `skew_iqrq` and
+% `skew_aedq` algorithms based on the size of A. For non-tridiagonal
 % matrices, it performs a preliminary Hessenberg decomposition and then
 % applies either the `iqrq` or `aedq` algorithm depending on the matrix
 % size. The choice of algorithm optimizes computational efficiency for
@@ -55,21 +55,21 @@ if nargin < 2, rtol = eps; end
 
 if ~istridiagonal(H)
     if n < 1000
-        [Q, T] = iqrq(H, rtol, true, verbose, progress_bar);
+        [Q, T] = iqrq(H, rtol, verbose, progress_bar);
     else
-        [Q, T] = aedq(H, rtol, true, verbose, progress_bar);
+        [Q, T] = aedq(H, rtol, verbose, progress_bar);
     end
 
     [P, D] = eigvec(P * Q, T);
 else
+    H = tril(H, 1);
     if n < 100
-        [Q, D] = tridiag_qr(H, rtol, true, verbose, progress_bar);
+        [Q, D] = skew_iqrq(H, rtol, verbose, progress_bar);
     else
-        [Q, D] = tridiag_aed(H, rtol, true, verbose, progress_bar);
+        [Q, D] = skew_aedq(H, rtol, verbose, progress_bar);
     end
 
     P = P * Q;
-    D = diag(D);
 end
 
 if nargout == 1, P = diag(D); end
@@ -79,5 +79,5 @@ end
 % Helper functions
 function y = istridiagonal(A)
 % Returns true if A is tridiagonal
-y = all(abs(tril(A, -2)) < eps, "all") & all(abs(triu(A, 2)) < eps, "all");
+y = normq(tril(A, -2)) / normq(A) < eps & normq(triu(A, 2)) / normq(A) < eps;
 end

@@ -1,4 +1,4 @@
-function [Q, T] = aedq(H, rtol, standardize, verbose, progress_bar)
+function [Q, T] = aedq(H, rtol, verbose, progress_bar)
 % AEDQ Eigenvalue and Eigenvector Computation via Aggressive Early Deflation
 % for Quaternion Hessenberg Matrices
 %
@@ -13,19 +13,16 @@ function [Q, T] = aedq(H, rtol, standardize, verbose, progress_bar)
 %
 % [Q, T] = AEDQ(H, RTOL) uses tolerance RTOL instead of the default eps.
 %
-% [Q, T] = AEDQ(H, RTOL, STANDARDIZE) standardizes the eigenvalues to unit 
-% modulus if STANDARDIZE is true.
-%
-% [Q, T] = AEDQ(H, RTOL, STANDARDIZE, VERBOSE) prints additional 
+% [Q, T] = AEDQ(H, RTOL, VERBOSE) prints additional 
 % information about the computation if VERBOSE is true.
 %
-% [Q, T] = AEDQ(H, RTOL, STANDARDIZE, VERBOSE, PROGRESS_BAR) displays
+% [Q, T] = AEDQ(H, RTOL, VERBOSE, PROGRESS_BAR) displays
 % a progress bar during computation if PROGRESS_BAR is true.
 %
 %
 % Example Usage:
 % [Q, D] = aedq(H); % Default usage
-% [Q, D] = aedq(H, 1e-12, true, true, true); % With all options specified
+% [Q, D] = aedq(H, 1e-12, true, true); % With all options specified
 %
 %
 % References:
@@ -42,7 +39,7 @@ function [Q, T] = aedq(H, rtol, standardize, verbose, progress_bar)
 
 
 % Input validation
-narginchk(1, 5), nargoutchk(0, 2);
+narginchk(1, 4), nargoutchk(0, 2);
 
 if ~ismatrix(H) 
     error('A must be a square matrix');
@@ -57,9 +54,8 @@ if ~isHessenberg(H)
 end
 
 % Set defaults
-if nargin < 5, progress_bar = false; end  
-if nargin < 4, verbose = false; end
-if nargin < 3, standardize = false; end
+if nargin < 4, progress_bar = false; end  
+if nargin < 3, verbose = false; end
 if nargin < 2, rtol = eps; end
 
 % Helper functions

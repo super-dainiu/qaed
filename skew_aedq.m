@@ -1,4 +1,4 @@
-function [Q, D] = tridiagq_aed(D, E, rtol, verbose, bar)
+function [Q, D] = skew_aedq(D, E, rtol, verbose, bar)
 narginchk(2, 4), nargoutchk(0, 2)
 
 if nargin < 5

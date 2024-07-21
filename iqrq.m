@@ -1,4 +1,4 @@
-function [Q, T] = iqrq(H, rtol, standardize, verbose, progress_bar)
+function [Q, T] = iqrq(H, rtol, verbose, progress_bar)
 % IQRQ Implicit Quaternion QR Algorithm for Hessenberg Matrices
 %
 % [Q, T] = IQRQ(H) computes the Schur form T of the n-by-n quaternion 
@@ -11,19 +11,17 @@ function [Q, T] = iqrq(H, rtol, standardize, verbose, progress_bar)
 %
 % [Q, T] = IQRQ(H, RTOL) uses tolerance RTOL instead of the default eps.
 %
-% [Q, T] = IQRQ(H, RTOL, STANDARDIZE) standardizes the eigenvalues to unit 
-% modulus if STANDARDIZE is true.
 %
-% [Q, T] = IQRQ(H, RTOL, STANDARDIZE, VERBOSE) prints additional 
+% [Q, T] = IQRQ(H, RTOL, VERBOSE) prints additional 
 % information about the computation if VERBOSE is true.
 %
-% [Q, T] = IQRQ(H, RTOL, STANDARDIZE, VERBOSE, PROGRESS_BAR) displays
+% [Q, T] = IQRQ(H, RTOL, VERBOSE, PROGRESS_BAR) displays
 % a progress bar during computation if PROGRESS_BAR is true.
 %
 %
 % Example Usage:
 % [Q, D] = iqrq(H); % Default usage
-% [Q, D] = iqrq(H, 1e-12, true, true, true); % With all options specified
+% [Q, D] = iqrq(H, 1e-12, true, true); % With all options specified
 %
 %
 % References:
@@ -34,7 +32,7 @@ function [Q, T] = iqrq(H, rtol, standardize, verbose, progress_bar)
 %     Johns Hopkins University Press, 1996.
 
 % Input validation
-narginchk(1, 5), nargoutchk(0, 5);
+narginchk(1, 4), nargoutchk(0, 2);
 
 if ~ismatrix(H) 
     error('A must be a square matrix');
@@ -49,9 +47,8 @@ if ~isHessenberg(H)
 end
 
 % Set defaults
-if nargin < 5, progress_bar = false; end  
-if nargin < 4, verbose = false; end
-if nargin < 3, standardize = false; end
+if nargin < 4, progress_bar = false; end  
+if nargin < 3, verbose = false; end
 if nargin < 2, rtol = eps; end
 
 % Helper functions
