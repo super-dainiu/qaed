@@ -1,0 +1,70 @@
+The following modules were not unloaded:
+  (Use "module --force purge" to unload all):
+
+  1) StdEnv
+
+                            < M A T L A B (R) >
+                  Copyright 1984-2023 The MathWorks, Inc.
+             R2023a Update 2 (9.14.0.2254940) 64-bit (glnxa64)
+                               April 17, 2023
+
+Warning: X does not support locale C.UTF-8
+ 
+To get started, type doc.
+For product information, visit www.mathworks.com.
+ 
+Testing random matrix of order_n = 64 ...
+Using aed ...
+Total steps of Skew AED: 125
+Time for H matrix multiplications: 1.179575 s
+Time for computing Q matrix: 1.312741 s
+Time for Householder computations: 0.682490 s
+Time for AED: 0.030638 s, AED deflation: 6
+Total time: 3.836444 s, total deflation: 64
+Time without constructing Q: 2.523732 s
+Elapsed time is 3.944530 seconds.
+Using iqr ...
+Total steps of Skew IQR: 110
+Time for H matrix multiplications: 0.899969 s
+Time for computing Q matrix: 0.467589 s
+Time for Householder computations: 0.524778 s
+Total time: 2.406819 s, total deflation: 64
+Time without constructing Q: 1.939268 s
+Elapsed time is 2.408598 seconds.
+Testing random matrix of order_n = 128 ...
+Using aed ...
+Total steps of Skew AED: 220
+Time for H matrix multiplications: 3.552934 s
+Time for computing Q matrix: 3.642282 s
+Time for Householder computations: 1.832202 s
+Time for AED: 0.087998 s, AED deflation: 41
+Total time: 10.585353 s, total deflation: 128
+Time without constructing Q: 6.943100 s
+Elapsed time is 10.591091 seconds.
+Using iqr ...
+Total steps of Skew IQR: 218
+Time for H matrix multiplications: 4.079182 s
+Time for computing Q matrix: 2.258996 s
+Time for Householder computations: 2.112781 s
+Total time: 10.246529 s, total deflation: 128
+Time without constructing Q: 7.987566 s
+Elapsed time is 10.247671 seconds.
+Testing random matrix of order_n = 256 ...
+Using aed ...
+Total steps of Skew AED: 383
+Time for H matrix multiplications: 18.423635 s
+Time for computing Q matrix: 18.260073 s
+Time for Householder computations: 5.770911 s
+Time for AED: 0.226955 s, AED deflation: 151
+Total time: 47.314733 s, total deflation: 256
+Time without constructing Q: 29.054685 s
+Elapsed time is 47.328558 seconds.
+Using iqr ...
+Total steps of Skew IQR: 418
+Time for H matrix multiplications: 26.330552 s
+Time for computing Q matrix: 15.024878 s
+Time for Householder computations: 8.220937 s
+Total time: 56.575623 s, total deflation: 256
+Time without constructing Q: 41.550779 s
+Elapsed time is 56.578893 seconds.
+Testing random matrix of order_n = 512 ...

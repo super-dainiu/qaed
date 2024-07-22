@@ -12,13 +12,13 @@ for n = order_n
     [~, A] = hessq(A);
     A = tril(A, 1);
 
-    % disp('Using aed ...');
-    % tic
-    % [Q, D] = skew_aedq(A, tol, true);
-    % toc
-    % isunitary(Q, rtol); isdiag_(D, rtol); 
-    % compare_(Q' * A * Q, D, rtol, "Q' * A * Q and D does not match!");
-    % save(sprintf('skew_aed_n%d.mat', n), 'A', 'Q', 'D');
+    disp('Using aed ...');
+    tic
+    [Q, D] = skew_aedq(A, tol, true);
+    toc
+    isunitary(Q, rtol); isdiag_(D, rtol); 
+    compare_(Q' * A * Q, D, rtol, "Q' * A * Q and D does not match!");
+    save(sprintf('skew_aed_n%d.mat', n), 'A', 'Q', 'D');
 
     disp('Using iqr ...');
     tic
