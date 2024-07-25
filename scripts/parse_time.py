@@ -2,22 +2,23 @@ import re
 import pandas as pd
 
 
-type = 'hess'
+type = 'skew'
 with open(f'{type}rand.txt') as f:
     logger_output = f.read()
 
 # Using aed ...
-# Total step of AED 190
-# Time for H matrix multiplications: 1.895366 s
-# Time for computing Q matrix: 0.804389 s
-# Time for Householder computations: 0.895097 s
-# Time for AED = 2.227258 s, aed deflation = 44
-# Total time = 6.221653 s, total deflation = 64
-# Time without constructing Q = 5.417292 s
+# Total steps of AED: 125
+# Time for H matrix multiplications: 1.172720 s
+# Time for computing Q matrix: 1.228778 s
+# Time for Householder computations: 0.685299 s
+# Time for AED: 0.030266 s, AED deflation: 6
+# Total time: 3.739278 s, total deflation: 64
+# Time without constructing Q: 2.510528 s
+# Elapsed time is 3.777767 seconds.
 
 # parse AED
 data = []
-aed_pattern = re.compile(r'Using aed ...\nTotal step of AED (\d+).*?Time for H matrix multiplications: (\d+\.\d+) s.*?Time for computing Q matrix: (\d+\.\d+) s.*?Time for Householder computations: (\d+\.\d+) s.*?Time for AED = (\d+\.\d+) s, aed deflation = (\d+).*?Total time = (\d+\.\d+) s, total deflation = (\d+).*?Time without constructing Q = (\d+\.\d+) s', re.DOTALL)
+aed_pattern = re.compile(r'Using aed ...\nTotal steps of AED: (\d+).*?Time for H matrix multiplications: (\d+\.\d+) s.*?Time for computing Q matrix: (\d+\.\d+) s.*?Time for Householder computations: (\d+\.\d+) s.*?Time for AED: (\d+\.\d+) s, AED deflation: (\d+).*?Total time: (\d+\.\d+) s, total deflation: (\d+).*?Time without constructing Q: (\d+\.\d+) s', re.DOTALL)
 for aed_match in aed_pattern.finditer(logger_output):
     data.append({
         'deflation strategy': 'AED',
@@ -30,12 +31,13 @@ for aed_match in aed_pattern.finditer(logger_output):
     
 
 # Using iqr ...
-# Total steps of IQR: 200
-# Time for H matrix multiplications: 1.936159 s
-# Time for computing Q matrix: 0.811810 s
-# Time for Householder computations: 0.918215 s
-# Total time: 4.111669 s, total deflation: 64
-# Time without constructing Q: 3.299899 s
+# Total steps of IQR: 110
+# Time for H matrix multiplications: 0.905635 s
+# Time for computing Q matrix: 0.466697 s
+# Time for Householder computations: 0.530911 s
+# Total time: 2.417120 s, total deflation: 64
+# Time without constructing Q: 1.950463 s
+# Elapsed time is 2.418864 seconds.
 
 # parse IQR
 iqr_pattern = re.compile(r'Using iqr ...\nTotal steps of IQR: (\d+).*?Time for H matrix multiplications: (\d+\.\d+) s.*?Time for computing Q matrix: (\d+\.\d+) s.*?Time for Householder computations: (\d+\.\d+) s.*?Total time: (\d+\.\d+) s, total deflation: (\d+).*?Time without constructing Q: (\d+\.\d+) s', re.DOTALL)

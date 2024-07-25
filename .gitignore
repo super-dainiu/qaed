@@ -1,2 +1,4 @@
 *.mat
 scripts/*.txt
+scripts/*.csv
+scripts/*.tex

@@ -211,7 +211,7 @@ if progress_bar
 end
 
 if verbose
-    fprintf('Total steps of Skew AED: %d\n', GS);
+    fprintf('Total steps of AED: %d\n', GS);
     fprintf('Time for H matrix multiplications: %f s\n', H_mult_time);
     fprintf('Time for computing Q matrix: %f s\n', Q_time);
     fprintf('Time for Householder computations: %f s\n', House_time);

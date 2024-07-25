@@ -198,9 +198,9 @@ if verbose
     fprintf('Time for H matrix multiplications: %f s\n', H_mult_time      );
     fprintf('Time for computing Q matrix: %f s\n'      , Q_time           );
     fprintf('Time for Householder computations: %f s\n', House_time       );
-    fprintf('Time for AED = %f s, aed deflation = %d\n', AED_time, DA     );
-    fprintf('Total time = %f s, total deflation = %d\n', toc(Tz), n       );
-    fprintf('Time without constructing Q = %f s\n'     , toc(Tz) - Q_time );
+    fprintf('Time for AED: %f s, AED deflation: %d\n'  , AED_time, DA     );
+    fprintf('Total time: %f s, total deflation: %d\n'  , toc(Tz), n       );
+    fprintf('Time without constructing Q: %f s\n'      , toc(Tz) - Q_time );
 end
 end
 
