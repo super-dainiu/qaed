@@ -2,30 +2,33 @@ addpath('/home/ys792/project/qaed/qtfm')
 tol = eps;
 rtol = 1e-12;
 
-order_n = [64, 128, 256, 512, 1024, 2048, 4096, 8192];
+order_n = [128, 256, 512];
+alpha = [1/32, 1/16, 3/32, 1/8, 3/16, 1/4, 3/8];
 for n = order_n
-    rng(0)
-
     fprintf('Testing random matrix of order_n = %d ...\n', n);
-    A = randq(n) .* randn(n);
-    A = triu(A, -1);
+    for a = alpha
+        rng(0)
 
-    disp('Using aed ...');
-    tic
-    [Q, T] = aedq(A, tol, true);
-    toc
-    isunitary(Q, rtol); istriu_(T, 0, rtol); 
-    compare_(Q' * A * Q, T, rtol, "Q' * A * Q and T does not match!");
-    % save(sprintf('hess_aed_n%d.mat', n), 'A', 'Q', 'T');
+        A = randq(n) .* randn(n);
+        [~, A] = hessq(A);
 
-    % disp('Using iqr ...');
-    % tic
-    % [Q, T] = iqrq(A, tol, true);
-    % toc
-    % isunitary(Q, rtol); istriu_(T, 0, rtol);
-    % compare_(Q' * A * Q, T, rtol, "Q' * A * Q and T does not match!");
-    % save(sprintf('hess_iqr_n%d.mat', n), 'A', 'Q', 'T');
+        disp('Using fullrand aed with alpha = ' + string(a) + ' ...');
+        tic
+        [Q, T] = aedq(A, tol, true, false, a);
+        toc
+        isunitary(Q, rtol); istriu_(T, 0, rtol); 
+        compare_(Q' * A * Q, T, rtol, "Q' * A * Q and T does not match!");
 
+        A = randq(n) .* randn(n);
+        A = triu(A, -1);
+
+        disp('Using hessrand aed with alpha = ' + string(a) + ' ...');
+        tic
+        [Q, T] = aedq(A, tol, true, false, a);
+        toc
+        isunitary(Q, rtol); istriu_(T, 0, rtol); 
+        compare_(Q' * A * Q, T, rtol, "Q' * A * Q and T does not match!");
+    end
 end
 
 % Helper functions

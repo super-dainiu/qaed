@@ -1,4 +1,4 @@
-function [Q, T] = aedq(H, rtol, verbose, progress_bar)
+function [Q, T] = aedq(H, rtol, verbose, progress_bar, alpha)
 % AEDQ Eigenvalue and Eigenvector Computation via Aggressive Early Deflation
 % for Quaternion Hessenberg Matrices
 %
@@ -39,7 +39,7 @@ function [Q, T] = aedq(H, rtol, verbose, progress_bar)
 
 
 % Input validation
-narginchk(1, 4), nargoutchk(0, 2);
+narginchk(1, 5), nargoutchk(0, 2);
 
 if ~ismatrix(H) 
     error('A must be a square matrix');
@@ -54,6 +54,7 @@ if ~isHessenberg(H)
 end
 
 % Set defaults
+if nargin < 5, alpha = 0.25; end
 if nargin < 4, progress_bar = false; end  
 if nargin < 3, verbose = false; end
 if nargin < 2, rtol = eps; end
@@ -82,7 +83,7 @@ ilo = 1;
 HH  = H;
 while ihi >= 1
     while (ihi - ilo > 1)
-        NS = aed_num_shifts(ihi - ilo + 1);  
+        NS = aed_num_shifts(ihi - ilo + 1, alpha);
         WS = min(aed_win_size(ihi - ilo + 1, NS), ihi - ilo);
         sp = max(ihi - WS, ilo);
 
@@ -292,22 +293,8 @@ H(1:ihi, ihi+1:n) = U' * H(1:ihi, ihi+1:n);
 Q( :   ,   1:ihi) = Q( :   ,    1:ihi) * U;
 end
 
-function NS = aed_num_shifts(ihi)
-if ihi < 30
-    NS = 2;
-elseif ihi < 60
-    NS = 4;
-elseif ihi < 150
-    NS = 10;
-elseif ihi < 590
-    NS = max(0, ihi / round(log2(double(ihi))));
-elseif ihi < 3000
-    NS = 64;
-else
-    NS = 128;
-end
-
-NS = max(2, NS - mod(NS, 2));
+function NS = aed_num_shifts(ihi, alpha)
+NS = max(2, round(alpha * ihi));
 end
 
 

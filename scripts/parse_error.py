@@ -1,7 +1,7 @@
 import re
 import pandas as pd
 
-type = 'hess'
+type = 'skew'
 with open(f'{type}rand_err.txt') as f:
     logger_output = f.read()
 

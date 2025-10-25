@@ -16,15 +16,15 @@ for n = order_n
     toc
     isunitary(Q, rtol); istriu_(T, 0, rtol); 
     compare_(Q' * A * Q, T, rtol, "Q' * A * Q and T does not match!");
-    save(sprintf('full_aed_n%d.mat', n), 'A', 'Q', 'T');
+    % save(sprintf('full_aed_n%d.mat', n), 'A', 'Q', 'T');
 
-    disp('Using iqr ...');
-    tic
-    [Q, T] = iqrq(A, tol, true);
-    toc
-    isunitary(Q, rtol); istriu_(T, 0, rtol);
-    compare_(Q' * A * Q, T, rtol, "Q' * A * Q and T does not match!");
-    save(sprintf('full_iqr_n%d.mat', n), 'A', 'Q', 'T');
+    % disp('Using iqr ...');
+    % tic
+    % [Q, T] = iqrq(A, tol, true);
+    % toc
+    % isunitary(Q, rtol); istriu_(T, 0, rtol);
+    % compare_(Q' * A * Q, T, rtol, "Q' * A * Q and T does not match!");
+    % save(sprintf('full_iqr_n%d.mat', n), 'A', 'Q', 'T');
 
 end
 

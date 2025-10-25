@@ -1,10 +1,10 @@
 #!/bin/bash
 #SBATCH --job-name=hessrand_cpu
-#SBATCH --output=hessrand_cont.txt
+#SBATCH --output=hessrand_aed.txt
 #SBATCH --ntasks=1
 #SBATCH --time=7-00:00:00
-#SBATCH --cpus-per-task=20
-#SBATCH --mem-per-cpu=20G
+#SBATCH --cpus-per-task=10
+#SBATCH --mem-per-cpu=5G
 #SBATCH --partition=week
 module purge
 module load MATLAB/2023a
