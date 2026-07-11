@@ -516,22 +516,27 @@ inline void skew_aedq(QMat H, double rtol, QMat& Q, std::vector<Quat>& D,
 // ---------------------------------------------------------------------------
 // sylvesterc_tri: solve T X - X b = c with T upper triangular (complex diag).
 // ---------------------------------------------------------------------------
-inline std::vector<Quat> sylvesterc_tri(const QMat& T, const Quat& b, std::vector<Quat> c) {
+inline std::vector<Quat> sylvesterc_tri(const QMat& T, const Quat& b, std::vector<Quat> c,
+                                        double* scale = nullptr) {
     const int n = T.rows();
     std::vector<Quat> X(n, Quat::zero());
+    double s_total = 1.0;
     for (int i = n; i >= 1; --i) {
         X[i - 1] = sylvesterc(T(i, i), b, c[i - 1]);
-        // Rescale to avoid overflow when eigenvalues are clustered (the
-        // equation is linear, so scaling X and c together preserves the
-        // solution direction; callers normalize the result anyway).
+        // Rescale to avoid overflow when eigenvalues are clustered: the
+        // returned X then solves T X - X b = s_total * c, and the caller
+        // must scale the right-hand side (or its own combination
+        // coefficient) by s_total accordingly.
         double ax = X[i - 1].abs();
         if (ax > 1e100) {
             double s = 1.0 / ax;
+            s_total *= s;
             for (int k = i - 1; k < n; ++k) X[k] = X[k] * s;
             for (int k = 0; k < i - 1; ++k) c[k] = c[k] * s;
         }
         for (int k = 1; k <= i - 1; ++k) c[k - 1] -= T(k, i) * X[i - 1];
     }
+    if (scale) *scale = s_total;
     return X;
 }
 
@@ -545,13 +550,15 @@ inline void eigvec(const QMat& Q, const QMat& T, QMat& P, std::vector<Quat>& D) 
     for (int i = n; i >= 2; --i) {
         c.assign(i - 1, Quat::zero());
         for (int k = 1; k <= i - 1; ++k) c[k - 1] = T(k, i);
-        std::vector<Quat> x = sylvesterc_tri(T.block(1, i - 1, 1, i - 1), T(i, i), c);
-        // P(:,i) -= P(:,1:i-1) * x ; then normalize
+        double sc = 1.0;
+        std::vector<Quat> x = sylvesterc_tri(T.block(1, i - 1, 1, i - 1), T(i, i), c, &sc);
+        // P(:,i) = P(:,i)*sc - P(:,1:i-1) * x ; then normalize (sc carries
+        // the anti-overflow rescaling of the Sylvester solve)
 #pragma omp parallel for schedule(static) if (n > 128)
         for (int r = 1; r <= n; ++r) {
             Quat s = Quat::zero();
             for (int k = 1; k <= i - 1; ++k) s += P(r, k) * x[k - 1];
-            P(r, i) -= s;
+            P(r, i) = P(r, i) * sc - s;
         }
         double nn = 0;
         for (int r = 1; r <= n; ++r) nn += P(r, i).norm2();
