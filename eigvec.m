@@ -13,6 +13,12 @@ function [P, D] = eigvec(Q, T)
 % [1] Golub, G. H., and Van Loan, C. F. (2013). Matrix Computations (4th ed.).
 %     Johns Hopkins University Press.
 
+% Dispatch to the C++ core when available (see qaed_accel).
+if qaed_accel()
+    [P, D] = eigvec_cpp(Q, T);
+    return
+end
+
 P = Q;
 n = size(T, 1);
 

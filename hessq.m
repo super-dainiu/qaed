@@ -17,6 +17,13 @@ function [Q, H] = hessq(A)
 
 narginchk(1, 1), nargoutchk(0, 2)
 
+% Dispatch to the C++ core when available (see qaed_accel).
+if qaed_accel()
+    [Q, H] = hessq_cpp(A);
+    if nargout < 2, Q = H; end
+    return
+end
+
 % Helper functions
 householder_lapply = @(u, x) x - u * (u' * x);
 householder_rapply = @(u, x) x - (x * u) * u';

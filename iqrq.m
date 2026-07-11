@@ -47,9 +47,17 @@ if ~isHessenberg(H)
 end
 
 % Set defaults
-if nargin < 4, progress_bar = false; end  
+if nargin < 4, progress_bar = false; end
 if nargin < 3, verbose = false; end
 if nargin < 2, rtol = eps; end
+
+% Dispatch to the C++ core when available (see qaed_accel).
+if qaed_accel()
+    Tz = tic;
+    [Q, T] = iqrq_cpp(H, rtol, verbose, progress_bar);
+    if verbose, fprintf('iqrq (C++ core): n = %d, %f s\n', size(H, 1), toc(Tz)); end
+    return
+end
 
 % Helper functions
 householder_lapply = @(u, x) x - u * (u' * x);
