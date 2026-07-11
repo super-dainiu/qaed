@@ -24,6 +24,14 @@ n = size(T, 1); X = zerosq(n, 1);
 
 for i = n:-1:1
     X(i) = sylvesterc(T(i, i), b, c(i));
+    % Rescale to avoid overflow when eigenvalues are clustered (the equation
+    % is linear, so scaling X and c together preserves the solution
+    % direction; callers normalize the result anyway).
+    if abs(X(i)) > 1e100
+        s = 1 / abs(X(i));
+        X(i:n) = X(i:n) * s;
+        c = c * s;
+    end
     c = c(1:i-1) - T(1:i-1, i) * X(i);
 end
 end

@@ -521,6 +521,15 @@ inline std::vector<Quat> sylvesterc_tri(const QMat& T, const Quat& b, std::vecto
     std::vector<Quat> X(n, Quat::zero());
     for (int i = n; i >= 1; --i) {
         X[i - 1] = sylvesterc(T(i, i), b, c[i - 1]);
+        // Rescale to avoid overflow when eigenvalues are clustered (the
+        // equation is linear, so scaling X and c together preserves the
+        // solution direction; callers normalize the result anyway).
+        double ax = X[i - 1].abs();
+        if (ax > 1e100) {
+            double s = 1.0 / ax;
+            for (int k = i - 1; k < n; ++k) X[k] = X[k] * s;
+            for (int k = 0; k < i - 1; ++k) c[k] = c[k] * s;
+        }
         for (int k = 1; k <= i - 1; ++k) c[k - 1] -= T(k, i) * X[i - 1];
     }
     return X;

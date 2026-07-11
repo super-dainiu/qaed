@@ -39,19 +39,35 @@ def main(path):
         m = re.search(r"residual .* = ([\d.e+-]+)", line)
         if m:
             cur["e2"] = float(m.group(1))
+        m = re.search(r"eigvec .* = ([\d.e+-]+)", line)
+        if m:
+            cur["e3"] = float(m.group(1))
 
-    for typ in ["full", "hess"]:
-        print(f"% ---- {typ}rand ----")
-        ns = sorted({r["n"] for r in runs if r["type"] == typ})
+    for typ in ["full", "hess", "skew"]:
+        sel = [r for r in runs if r["type"] == typ and "time" in r]
+        if not sel:
+            continue
+        algs = [("aed", "QR+AED"), ("iqr", "QR")]
+        if typ == "skew":
+            algs = [("skew_aed", "QR+AED"), ("skew_iqr", "QR")]
+        print(f"% ---- {typ}rand: performance ----")
+        ns = sorted({r["n"] for r in sel})
         for n in ns:
-            for alg, label in [("aed", "QR+AED"), ("iqr", "QR")]:
-                r = next((r for r in runs if r["type"] == typ and r["n"] == n
-                          and r["alg"] == alg and "time" in r), None)
+            for alg, label in algs:
+                r = next((r for r in sel if r["n"] == n and r["alg"] == alg), None)
                 if r is None:
                     continue
-                aed = sci(r["aed"]) if r.get("aed") is not None else "N/A"
+                aed = sci(r["aed"]) if r.get("aed") else "N/A"
                 print(f"{label} & {n} & {r['steps']} & {sci(r['time'])} & "
-                      f"{sci(r['q'])} & {aed} & {sci(r['e1'])} & {sci(r['e2'])} \\\\")
+                      f"{sci(r['q'])} & {aed} \\\\")
+        print(f"% ---- {typ}rand: stability ----")
+        for n in ns:
+            for alg, label in algs:
+                r = next((r for r in sel if r["n"] == n and r["alg"] == alg), None)
+                if r is None or "e3" not in r:
+                    continue
+                print(f"{label} & {n} & {sci(r['e1'])} & {sci(r['e2'])} & "
+                      f"{sci(r['e3'])} \\\\")
 
 
 if __name__ == "__main__":

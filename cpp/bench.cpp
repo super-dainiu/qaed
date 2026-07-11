@@ -335,5 +335,21 @@ int main(int argc, char** argv) {
     printf("residual  ||Q'HQ - T||/||H||       = %.3e\n", schur_residual(H, Q, T));
     printf("lower mass ||tril(T,-1)||/||T||    = %.3e\n", lower_mass(T, -1));
 
+    // e3: eigenvector residual ||H*P - P*D|| / ((||H|| + ||D||) * ||P||)
+    {
+        QMat P;
+        std::vector<Quat> D;
+        eigvec(Q, T, P, D);
+        double dnorm = 0;
+        for (const Quat& d : D) dnorm += d.norm2();
+        dnorm = std::sqrt(dnorm);
+        QMat HP = qmul(H, P);
+        for (int j = 1; j <= n; ++j)
+            for (int i = 1; i <= n; ++i)
+                HP(i, j) -= P(i, j) * D[j - 1];
+        printf("eigvec    ||HP - PD||/((|H|+|D|)|P|) = %.3e\n",
+               HP.norm_fro() / ((H.norm_fro() + dnorm) * P.norm_fro()));
+    }
+
     return 0;
 }
