@@ -9,3 +9,4 @@ cpp/*.o
 *.qmat
 cpp_bench*.txt
 mex_check*.txt
+cpp/*.log

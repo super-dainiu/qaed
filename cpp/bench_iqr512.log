@@ -1,6 +1,0 @@
-alg = iqr, n = 512, rtol = 2.220e-16
-hessq time: 1.515 s (unitarity 2.428e-15, residual 3.016e-15)
-iqrq time: 8.615 s (QR steps: 1382)
-unitarity ||Q'Q - I||/sqrt(n)      = 2.098e-14
-residual  ||Q'HQ - T||/||H||       = 1.506e-14
-lower mass ||tril(T,-1)||/||T||    = 0.000e+00
