@@ -32,6 +32,37 @@ static QMat rand_qmat(int n, unsigned seed) {
     return A;
 }
 
+// skewrand: A = randq(n).*rand(n); A = A - A'; reduce to tridiagonal form.
+static QMat rand_skew_tridiag(int n, unsigned seed, double* t_hess = nullptr) {
+    std::mt19937_64 gen(seed);
+    std::normal_distribution<double> N(0.0, 1.0);
+    std::uniform_real_distribution<double> U(0.0, 1.0);
+    QMat A(n, n);
+    for (int j = 1; j <= n; ++j)
+        for (int i = 1; i <= n; ++i) {
+            Quat q(N(gen), N(gen), N(gen), N(gen));
+            double a = q.abs();
+            if (a == 0) q = Quat::one(); else q = q / a;
+            A(i, j) = q * U(gen);
+        }
+    for (int j = 1; j <= n; ++j)          // A <- A - A'
+        for (int i = 1; i < j; ++i) {
+            Quat v = A(i, j) - A(j, i).conj();
+            A(i, j) = v;
+            A(j, i) = -v.conj();
+        }
+    for (int i = 1; i <= n; ++i) {
+        Quat d = A(i, i);
+        A(i, i) = (d - d.conj()) * 0.5;   // pure vector part
+    }
+    QMat Qh, H;
+    auto t0 = clk::now();
+    hessq(A, Qh, H);
+    if (t_hess) *t_hess = tictoc(t0);
+    H.tril(1);                            // skew-Hermitian Hessenberg = tridiagonal
+    return H;
+}
+
 // ---- verification helpers -------------------------------------------------
 static double unitarity_err(const QMat& Q) {
     QMat E = qmul(Q.ctranspose(), Q);
@@ -166,12 +197,40 @@ static int selftest() {
         eigq(A, 2.2e-16, P, D);
         check("eigq n=80 residual", eig_residual(A, P, D), 1e-10);
     }
+    for (int n : {24, 60, 150}) {   // skew tridiagonal specialization
+        QMat H = rand_skew_tridiag(n, 300 + n);
+        QMat Q1, Q2;
+        std::vector<Quat> D1, D2;
+        skew_iqrq(H, 2.2e-16, Q1, D1);
+        skew_aedq(H, 2.2e-16, Q2, D2);
+        char buf[64];
+        auto diag_resid = [&](const QMat& Q, const std::vector<Quat>& D) {
+            QMat R = qmul(qmul(Q.ctranspose(), H), Q);
+            for (int i = 1; i <= n; ++i) R(i, i) -= D[i - 1];
+            return R.norm_fro() / H.norm_fro();
+        };
+        snprintf(buf, sizeof buf, "skew_iqrq n=%d resid", n);
+        check(buf, diag_resid(Q1, D1), 1e-11);
+        snprintf(buf, sizeof buf, "skew_aedq n=%d resid", n);
+        check(buf, diag_resid(Q2, D2), 1e-11);
+        snprintf(buf, sizeof buf, "skew unitary n=%d", n);
+        check(buf, std::max(unitarity_err(Q1), unitarity_err(Q2)), 1e-11);
+        // eigenvalue multisets agree (standardized |v| values)
+        std::vector<double> a1, a2;
+        for (int i = 0; i < n; ++i) { a1.push_back(D1[i].abs()); a2.push_back(D2[i].abs()); }
+        std::sort(a1.begin(), a1.end());
+        std::sort(a2.begin(), a2.end());
+        double worst = 0, scale = a1.back();
+        for (int i = 0; i < n; ++i) worst = std::max(worst, std::abs(a1[i] - a2[i]));
+        snprintf(buf, sizeof buf, "skew eig match n=%d", n);
+        check(buf, worst / scale, 1e-11);
+    }
     printf(fail ? "SELFTEST: %d FAILURES\n" : "SELFTEST: all passed\n", fail);
     return fail ? 1 : 0;
 }
 
 int main(int argc, char** argv) {
-    std::string alg = "aed";
+    std::string alg = "aed", type = "full";
     int n = 256;
     unsigned seed = 0;
     double rtol = 2.220446049250313e-16, alpha = 0.25;
@@ -180,6 +239,7 @@ int main(int argc, char** argv) {
     for (int i = 1; i < argc; ++i) {
         auto next = [&]() -> const char* { return (i + 1 < argc) ? argv[++i] : ""; };
         if (!strcmp(argv[i], "--alg")) alg = next();
+        else if (!strcmp(argv[i], "--type")) type = next();
         else if (!strcmp(argv[i], "--n")) n = atoi(next());
         else if (!strcmp(argv[i], "--seed")) seed = static_cast<unsigned>(atoi(next()));
         else if (!strcmp(argv[i], "--rtol")) rtol = atof(next());
@@ -189,9 +249,44 @@ int main(int argc, char** argv) {
     }
     if (do_selftest) return selftest();
 
-    QMat A = rand_qmat(n, seed);
+    printf("alg = %s, type = %s, n = %d, rtol = %.3e\n", alg.c_str(), type.c_str(), n, rtol);
 
-    printf("alg = %s, n = %d, rtol = %.3e\n", alg.c_str(), n, rtol);
+    if (alg == "skew_iqr" || alg == "skew_aed") {
+        double t_hess = 0;
+        QMat H = rand_skew_tridiag(n, seed, &t_hess);
+        printf("tridiagonalization time: %.3f s\n", t_hess);
+        QMat Q;
+        std::vector<Quat> D;
+        SkewStats st;
+        qaed_timers().reset();
+        auto t0 = clk::now();
+        if (alg == "skew_iqr") skew_iqrq(H, rtol, Q, D, &st);
+        else                   skew_aedq(H, rtol, Q, D, &st);
+        double dt = tictoc(t0);
+        printf("%s time: %.3f s (QR steps: %ld, AED deflated: %ld)\n",
+               alg.c_str(), dt, st.steps, st.aed_deflated);
+        printf("time to construct Q: %.3f s, time for AED: %.3f s\n",
+               qaed_timers().q_time, qaed_timers().aed_time);
+        // e1, e2, e3 (for a normal matrix the Schur vectors are eigenvectors)
+        QMat R = qmul(qmul(Q.ctranspose(), H), Q);
+        for (int i = 1; i <= n; ++i) R(i, i) -= D[i - 1];
+        double dnorm = 0;
+        for (const Quat& d : D) dnorm += d.norm2();
+        dnorm = std::sqrt(dnorm);
+        QMat HQ = qmul(H, Q);
+        for (int j = 1; j <= n; ++j)
+            for (int i = 1; i <= n; ++i)
+                HQ(i, j) -= Q(i, j) * D[j - 1];
+        printf("unitarity ||Q'Q - I||/sqrt(n)      = %.3e\n", unitarity_err(Q));
+        printf("residual  ||Q'HQ - D||/||H||       = %.3e\n", R.norm_fro() / H.norm_fro());
+        printf("eigvec    ||HQ - QD||/((|H|+|D|)|Q|) = %.3e\n",
+               HQ.norm_fro() / ((H.norm_fro() + dnorm) * Q.norm_fro()));
+        return 0;
+    }
+
+    QMat A = rand_qmat(n, seed);
+    if (type == "hess")  // hessrand: directly generated upper Hessenberg
+        A.triu(-1);
 
     if (alg == "eig") {
         QMat P;
@@ -214,12 +309,14 @@ int main(int argc, char** argv) {
 
     QMat Q, T;
     double dt = 0;
+    qaed_timers().reset();
     if (alg == "iqr") {
         IqrStats st;
         auto t0 = clk::now();
         iqrq(H, rtol, Q, T, &st);
         dt = tictoc(t0);
         printf("iqrq time: %.3f s (QR steps: %ld)\n", dt, st.steps);
+        printf("time to construct Q: %.3f s\n", qaed_timers().q_time);
     } else if (alg == "aed") {
         AedStats st;
         auto t0 = clk::now();
@@ -227,6 +324,8 @@ int main(int argc, char** argv) {
         dt = tictoc(t0);
         printf("aedq time: %.3f s (QR steps: %ld, AED deflated: %ld)\n",
                dt, st.steps, st.aed_deflated);
+        printf("time to construct Q: %.3f s, time for AED: %.3f s\n",
+               qaed_timers().q_time, qaed_timers().aed_time);
     } else {
         fprintf(stderr, "unknown alg %s\n", alg.c_str());
         return 2;

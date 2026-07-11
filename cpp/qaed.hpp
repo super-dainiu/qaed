@@ -4,6 +4,7 @@
 #pragma once
 #include "qmat.hpp"
 #include <algorithm>
+#include <chrono>
 #include <cstdio>
 
 namespace qaed {
@@ -26,6 +27,18 @@ inline void hessq(QMat A, QMat& Q, QMat& H) {
     }
     A.triu(-1);
     H = std::move(A);
+}
+
+// Cumulative timers matching the MATLAB verbose breakdown (time spent
+// updating the Schur vectors Q, and time spent inside the AED branch).
+struct QaedTimers {
+    double q_time = 0, aed_time = 0;
+    void reset() { q_time = aed_time = 0; }
+};
+inline QaedTimers& qaed_timers() { static QaedTimers t; return t; }
+inline double qaed_now() {
+    return std::chrono::duration<double>(
+        std::chrono::steady_clock::now().time_since_epoch()).count();
 }
 
 // Standardize diagonal entry (i,i): H(i,i) <- U' H(i,i) U, update row/col of H
@@ -62,7 +75,9 @@ inline void qr_sweep(QMat& H, QMat& Q, const Quat& x, int& ilo, int ihi,
     householder_vector(a, u, zeta);
     householder_lapply(H, u, ilo, ilo + 2, ilo, n);
     householder_rapply(H, u, 1, ihi, ilo, ilo + 2);
+    double t0 = qaed_now();
     householder_rapply(Q, u, 1, Q.rows(), ilo, ilo + 2);
+    qaed_timers().q_time += qaed_now() - t0;
 
     for (int i = ilo; i <= ihi - 2; ++i) {
         const int e = std::min(i + 3, ihi);
@@ -75,7 +90,9 @@ inline void qr_sweep(QMat& H, QMat& Q, const Quat& x, int& ilo, int ihi,
         householder_lapply(H, u, i + 1, e, sp, n);
         householder_rapply(H, u, 1, ihi, i + 1, e);
         for (int k = i + 2; k <= e; ++k) H(k, i) = Quat::zero();
+        t0 = qaed_now();
         householder_rapply(Q, u, 1, Q.rows(), i + 1, e);
+        qaed_timers().q_time += qaed_now() - t0;
 
         double sub = H(i + 1, i).abs();
         if (sub <= atol && sub <= rtol * (H(i, i).abs() + H(i + 1, i + 1).abs())) {
@@ -207,13 +224,17 @@ inline void aedq(QMat H, double rtol, QMat& Q, QMat& T, double alpha = 0.25,
             int sp = std::max(ihi - WS, ilo);
 
             if (ihi - ilo + 1 > detail::aed_min_size && sp > ilo) {
+                double t0 = qaed_now();
                 QMat Hw = H.block(sp, ihi, sp, ihi);
                 QMat U;
                 detail::aed_step(Hw, rtol, U, shifts);
                 H.set_block(sp, sp, Hw);
                 left_mul_ct(H, sp, ihi, ihi + 1, n, U);
                 right_mul(H, 1, sp - 1, sp, ihi, U);
+                qaed_timers().aed_time += qaed_now() - t0;
+                t0 = qaed_now();
                 right_mul(Q, 1, n, sp, ihi, U);
+                qaed_timers().q_time += qaed_now() - t0;
                 DA += ihi - sp - static_cast<long>(shifts.size());
                 ihi = sp + static_cast<int>(shifts.size());
             } else {
@@ -255,6 +276,240 @@ inline void aedq(QMat H, double rtol, QMat& Q, QMat& T, double alpha = 0.25,
 
     H.triu();
     T = std::move(H);
+    if (stats) { stats->steps = GS; stats->aed_deflated = DA; }
+}
+
+// ---------------------------------------------------------------------------
+// Skew-Hermitian tridiagonal specialization (H' = -H). Faithful port of
+// skew_iqrq.m / skew_aedq.m: band-limited sweeps, deflation criteria and the
+// AED-with-sorted-spike step, including the fixes of 2026-07 (spike/eigen-
+// value pairing, trailing-only deflation).
+// ---------------------------------------------------------------------------
+
+// One band-limited implicit-shift sweep on the tridiagonal block [ilo, ihi].
+inline void skew_qr_sweep(QMat& H, QMat& Q, const Quat& x, int& ilo, int ihi,
+                          double rtol) {
+    const double si = -2.0 * x.w;
+    const double ti = x.norm2();
+    std::vector<Quat> a, u;
+    Quat zeta;
+
+    a.assign(3, Quat::zero());
+    a[0] = H(ilo, ilo) * H(ilo, ilo) + H(ilo, ilo + 1) * H(ilo + 1, ilo)
+         + si * H(ilo, ilo) + Quat(ti);
+    a[1] = H(ilo + 1, ilo) * H(ilo, ilo) + H(ilo + 1, ilo + 1) * H(ilo + 1, ilo)
+         + si * H(ilo + 1, ilo);
+    a[2] = H(ilo + 2, ilo + 1) * H(ilo + 1, ilo);
+    householder_vector(a, u, zeta);
+
+    householder_rapply(H, u, ilo, ilo + 3, ilo, ilo + 2);
+    householder_lapply(H, u, ilo, ilo + 2, ilo, ilo + 3);
+    double t0 = qaed_now();
+    householder_rapply(Q, u, 1, Q.rows(), ilo, ilo + 2);
+    qaed_timers().q_time += qaed_now() - t0;
+
+    for (int i = ilo; i <= ihi - 2; ++i) {
+        const int e  = std::min(i + 3, ihi);
+        const int ee = std::min(e + 1, ihi);
+
+        a.assign(e - i, Quat::zero());
+        for (int k = i + 1; k <= e; ++k) a[k - i - 1] = H(k, i);
+        householder_vector(a, u, zeta);
+
+        householder_lapply(H, u, i + 1, e, i, ee);
+        householder_rapply(H, u, i, ee, i + 1, e);
+        // Trim the wake (kept banded by skew symmetry up to rounding).
+        for (int k = i + 2; k <= e; ++k) { H(k, i) = Quat::zero(); H(i, k) = Quat::zero(); }
+        t0 = qaed_now();
+        householder_rapply(Q, u, 1, Q.rows(), i + 1, e);
+        qaed_timers().q_time += qaed_now() - t0;
+
+        if (H(i + 1, i).abs() <= rtol * (H(i, i).abs() + H(i + 1, i + 1).abs())) {
+            standardize_diag(H, Q, i);
+            H(i + 1, i) = Quat::zero();
+            H(i, i + 1) = Quat::zero();
+            ilo = i + 1;
+        }
+    }
+    // Trim rounding fill in the trailing corner.
+    for (int c = std::max(1, ihi - 4); c <= ihi; ++c)
+        for (int r = std::max(1, ihi - 4); r <= ihi; ++r)
+            if (r - c > 1 || c - r > 1) { H(r, c) = Quat::zero(); }
+}
+
+// Trailing deflation loop shared by skew_iqrq / skew_aedq.
+inline void skew_deflate_trailing(QMat& H, QMat& Q, int ilo, int& ihi, double rtol) {
+    while (ihi > ilo + 1 &&
+           H(ihi, ihi - 1).abs() <= rtol * (H(ihi, ihi).abs() + H(ihi - 1, ihi - 1).abs())) {
+        standardize_diag(H, Q, ihi);
+        H(ihi, ihi - 1) = Quat::zero();
+        H(ihi - 1, ihi) = Quat::zero();
+        --ihi;
+    }
+}
+
+struct SkewStats { long steps = 0; long aed_deflated = 0; };
+
+// skew_iqrq: Q' * H0 * Q = D (diagonal, standardized) for skew-Hermitian
+// tridiagonal H0.
+inline void skew_iqrq(QMat H, double rtol, QMat& Q, std::vector<Quat>& D,
+                      SkewStats* stats = nullptr) {
+    const int n = H.rows();
+    int ilo = 1, ihi = n;
+    Q = QMat::eye(n);
+    long GS = 0;
+
+    while (ihi > 1) {
+        while (ihi - ilo > 2) {
+            Quat x = shift2(H.block(ihi - 1, ihi, ihi - 1, ihi));
+            ++GS;
+            skew_qr_sweep(H, Q, x, ilo, ihi, rtol);
+            skew_deflate_trailing(H, Q, ilo, ihi, rtol);
+        }
+        {   // Finish the remaining (<= 3x3) block with the general solver.
+            QMat U, T;
+            iqrq(H.block(ilo, ihi, ilo, ihi), rtol, U, T);
+            H.set_block(ilo, ilo, T);
+            double t0 = qaed_now();
+            right_mul(Q, 1, n, ilo, ihi, U);
+            qaed_timers().q_time += qaed_now() - t0;
+        }
+        ihi = ilo - 1;
+        ilo = 1;
+    }
+
+    D.assign(n, Quat::zero());
+    for (int i = 1; i <= n; ++i) D[i - 1] = H(i, i);
+    if (stats) stats->steps = GS;
+}
+
+namespace detail {
+inline int skew_num_shifts(int m) {
+    double NS;
+    if (m < 30) NS = 2;
+    else if (m < 60) NS = 4;
+    else if (m < 150) NS = 10;
+    else if (m < 590) NS = static_cast<double>(m) / std::lround(std::log2(static_cast<double>(m)));
+    else if (m < 3000) NS = 64;
+    else NS = 128;
+    int k = static_cast<int>(NS);
+    return std::max(2, k - k % 2);
+}
+} // namespace detail
+
+// skew_aedq: skew_iqrq with aggressive early deflation.
+inline void skew_aedq(QMat H, double rtol, QMat& Q, std::vector<Quat>& D,
+                      SkewStats* stats = nullptr) {
+    const int n = H.rows();
+    int ilo = 1, ihi = n;
+    Q = QMat::eye(n);
+    long GS = 0, DA = 0;
+    constexpr int MIN_SIZE = 12;
+    constexpr double NIBBLE = 0.14;
+    std::vector<Quat> shifts;
+
+    while (ihi > 1) {
+        while (ihi - ilo > 2) {
+            int NS = detail::skew_num_shifts(ihi - ilo + 1);
+            int WS = (ihi - ilo + 1 <= 500) ? NS : (3 * NS) / 2;
+            WS = std::max(4, WS - WS % 2);
+            const int win = std::min(WS, ihi - ilo + 1);
+            int whi = ihi;
+            const int wlo = std::max(ihi - win + 1, ilo);
+            const int sp = wlo - 1;
+
+            if (ihi - ilo + 1 >= MIN_SIZE && sp > ilo && win > 4) {
+                // AED: Schur form of the window, sort the spike, deflate its
+                // negligible trailing entries.
+                double t0 = qaed_now();
+                QMat U;
+                std::vector<Quat> Dw;
+                skew_iqrq(H.block(wlo, whi, wlo, whi), rtol, U, Dw);
+                QMat spike = qmul(U.ctranspose(), H.block(wlo, whi, sp, sp));
+
+                std::vector<int> idx(win);
+                for (int i = 0; i < win; ++i) idx[i] = i;
+                std::sort(idx.begin(), idx.end(), [&](int a2, int b2) {
+                    return spike(a2 + 1, 1).abs() > spike(b2 + 1, 1).abs();
+                });
+                qaed_timers().aed_time += qaed_now() - t0;
+
+                t0 = qaed_now();
+                right_mul(Q, 1, n, wlo, whi, U);
+                QMat Qw = Q.block(1, n, wlo, whi);   // permute window columns
+                for (int j = 0; j < win; ++j)
+                    for (int r = 1; r <= n; ++r)
+                        Q(r, wlo + j) = Qw(r, idx[j] + 1);
+                qaed_timers().q_time += qaed_now() - t0;
+
+                t0 = qaed_now();
+                std::vector<Quat> spikeS(win), Ds(win);
+                for (int j = 0; j < win; ++j) {
+                    spikeS[j] = spike(idx[j] + 1, 1);
+                    Ds[j] = Dw[idx[j]];
+                }
+                // Window block <- diag(Ds); spike column/row rewritten below.
+                for (int r = wlo; r <= whi; ++r)
+                    for (int c = wlo; c <= whi; ++c)
+                        H(r, c) = (r == c) ? Ds[r - wlo] : Quat::zero();
+
+                for (int j = win - 1; j >= 0; --j) {
+                    if (spikeS[j].abs() <= rtol * Ds[j].abs()) {
+                        spikeS[j] = Quat::zero();
+                        --whi;
+                    } else {
+                        break;
+                    }
+                }
+                for (int j = 0; j < win; ++j) {
+                    H(wlo + j, sp) = spikeS[j];
+                    H(sp, wlo + j) = -spikeS[j].conj();
+                }
+                shifts.clear();
+                for (int r = whi; r >= wlo; --r) shifts.push_back(H(r, r));
+                DA += ihi - whi;
+                ihi = whi;
+
+                // Restore the tridiagonal form of the arrow block.
+                QMat U2, Hh;
+                hessq(H.block(sp, ihi, sp, ihi), U2, Hh);
+                Hh.tril(1);   // skew: rounding fill above the band
+                H.set_block(sp, sp, Hh);
+                qaed_timers().aed_time += qaed_now() - t0;
+
+                t0 = qaed_now();
+                right_mul(Q, 1, n, sp, ihi, U2);
+                qaed_timers().q_time += qaed_now() - t0;
+            } else {
+                shifts.assign(1, shift2(H.block(ihi - 1, ihi, ihi - 1, ihi)));
+            }
+
+            if (static_cast<double>(ihi - sp + 1) / win < (1.0 - NIBBLE))
+                continue;
+
+            int LS = 0;
+            NS = std::min<int>(static_cast<int>(shifts.size()), NS);
+            while (ihi > ilo + 1 && LS < NS) {
+                ++GS;
+                ++LS;
+                skew_qr_sweep(H, Q, shifts[LS - 1], ilo, ihi, rtol);
+            }
+            skew_deflate_trailing(H, Q, ilo, ihi, rtol);
+        }
+        {
+            QMat U, T;
+            iqrq(H.block(ilo, ihi, ilo, ihi), rtol, U, T);
+            H.set_block(ilo, ilo, T);
+            double t0 = qaed_now();
+            right_mul(Q, 1, n, ilo, ihi, U);
+            qaed_timers().q_time += qaed_now() - t0;
+        }
+        ihi = ilo - 1;
+        ilo = 1;
+    }
+
+    D.assign(n, Quat::zero());
+    for (int i = 1; i <= n; ++i) D[i - 1] = H(i, i);
     if (stats) { stats->steps = GS; stats->aed_deflated = DA; }
 }
 

@@ -9,3 +9,5 @@ cpp/*.o
 cpp_bench*.txt
 mex_check*.txt
 cpp/*.log
+paper_bench*.txt
+skew_bench*.txt

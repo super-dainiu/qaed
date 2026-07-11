@@ -109,23 +109,40 @@ inline QMat qgemm(const QMat& A, const QMat& B) {
     assert(B.rows() == k);
     QMat C(m, n);
     static_assert(sizeof(Quat) == 4 * sizeof(double), "Quat must be 4 packed doubles");
-#pragma omp parallel for schedule(static) if (static_cast<long>(m) * n * k > 32768)
-    for (int j = 1; j <= n; ++j) {
-        double* cj = reinterpret_cast<double*>(&C(1, j));
-        for (int l = 1; l <= k; ++l) {
-            const Quat b = B(l, j);
-            if (b.w == 0.0 && b.x == 0.0 && b.y == 0.0 && b.z == 0.0) continue;
-            // a*b = a.w*t0 + a.x*t1 + a.y*t2 + a.z*t3 (sign-permuted b vectors
-            // hoisted out of the i-loop; the 4-lane inner loop vectorizes).
-            const double t0[4] = { b.w,  b.x,  b.y,  b.z};
-            const double t1[4] = {-b.x,  b.w, -b.z,  b.y};
-            const double t2[4] = {-b.y,  b.z,  b.w, -b.x};
-            const double t3[4] = {-b.z, -b.y,  b.x,  b.w};
-            const double* al = reinterpret_cast<const double*>(&A(1, l));
-            for (int i = 0; i < m; ++i) {
-                const double aw = al[4*i], ax = al[4*i+1], ay = al[4*i+2], az = al[4*i+3];
-                for (int p = 0; p < 4; ++p)
-                    cj[4*i + p] += aw * t0[p] + ax * t1[p] + ay * t2[p] + az * t3[p];
+
+    // Cache blocking: without it every column of C streams all of A, which is
+    // what dominates the large-n AED window updates. MC*KC quaternions of A
+    // (~600 KB) stay L2-resident while NC columns of C reuse them; C rows of
+    // one column (~MC) stay in L1 across the KC-long axpy chain.
+    constexpr int MC = 192, KC = 96, NC = 32;
+
+#pragma omp parallel for schedule(dynamic) if (static_cast<long>(m) * n * k > 32768)
+    for (int jj = 1; jj <= n; jj += NC) {
+        const int jend = std::min(jj + NC - 1, n);
+        for (int ll = 1; ll <= k; ll += KC) {
+            const int lend = std::min(ll + KC - 1, k);
+            for (int ii = 1; ii <= m; ii += MC) {
+                const int iend = std::min(ii + MC - 1, m);
+                const int mb = iend - ii + 1;
+                for (int j = jj; j <= jend; ++j) {
+                    double* cj = reinterpret_cast<double*>(&C(ii, j));
+                    for (int l = ll; l <= lend; ++l) {
+                        const Quat b = B(l, j);
+                        if (b.w == 0.0 && b.x == 0.0 && b.y == 0.0 && b.z == 0.0) continue;
+                        // a*b = a.w*t0 + a.x*t1 + a.y*t2 + a.z*t3 (sign-permuted
+                        // b vectors hoisted; the 4-lane inner loop vectorizes).
+                        const double t0[4] = { b.w,  b.x,  b.y,  b.z};
+                        const double t1[4] = {-b.x,  b.w, -b.z,  b.y};
+                        const double t2[4] = {-b.y,  b.z,  b.w, -b.x};
+                        const double t3[4] = {-b.z, -b.y,  b.x,  b.w};
+                        const double* al = reinterpret_cast<const double*>(&A(ii, l));
+                        for (int i = 0; i < mb; ++i) {
+                            const double aw = al[4*i], ax = al[4*i+1], ay = al[4*i+2], az = al[4*i+3];
+                            for (int p = 0; p < 4; ++p)
+                                cj[4*i + p] += aw * t0[p] + ax * t1[p] + ay * t2[p] + az * t3[p];
+                        }
+                    }
+                }
             }
         }
     }

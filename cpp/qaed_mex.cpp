@@ -100,6 +100,17 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[]) {
 
     try {
         QMat Q, T;
+        if (mode == "skew_iqr" || mode == "skew_aed") {
+            // [Qw..Qz, Dw..Dz] = qaed_mex('skew_iqr'|'skew_aed', Hw..Hz, rtol)
+            std::vector<Quat> D;
+            if (mode == "skew_iqr") skew_iqrq(H, rtol, Q, D);
+            else                    skew_aedq(H, rtol, Q, D);
+            T = QMat(static_cast<int>(D.size()), 1);
+            for (int i = 1; i <= T.rows(); ++i) T(i, 1) = D[i - 1];
+            pack(plhs, 0, Q);
+            if (nlhs > 4) pack(plhs, 4, T);
+            return;
+        }
         if (mode == "hess") {
             hessq(H, Q, T);
         } else if (mode == "iqr") {

@@ -39,9 +39,17 @@ if ~istridiagonal(H)
 end
 
 % Set defaults
-if nargin < 4, progress_bar = false; end  
+if nargin < 4, progress_bar = false; end
 if nargin < 3, verbose = false; end
 if nargin < 2, rtol = eps; end
+
+% Dispatch to the C++ core when available (see qaed_accel).
+if qaed_accel()
+    Tz = tic;
+    [Q, D] = skew_aedq_cpp(H, rtol, verbose, progress_bar);
+    if verbose, fprintf('skew_aedq (C++ core): n = %d, %f s\n', size(H, 1), toc(Tz)); end
+    return
+end
 
 % Helper functions
 householder_lapply = @(u, x) x - u * (u' * x);
@@ -82,19 +90,29 @@ while ihi > 1
             T0 = tic;
             [U, D] = skew_iqrq(H(wlo:whi, wlo:whi), rtol, false, false);
             D = diag(D);
-            spike = U' * H(wlo:whi, sp); 
+            spike = U' * H(wlo:whi, sp);
             [~, index] = sort(abs(spike), "descend");
             spike = spike(index);
-            H(wlo:whi, wlo:whi) = diag(D(index));
+            D = D(index);
+            H(wlo:whi, wlo:whi) = diag(D);
+            AED_time = AED_time + toc(T0);
 
+            T0 = tic;
             Q(:, wlo:whi) = Q(:, wlo:whi) * U;
             Q(:, wlo:whi) = Q(:, sp + index);
             Q_time = Q_time + toc(T0);
 
+            % Deflate trailing spike entries only: the eigenvalue paired
+            % with each (sorted) spike entry is D(i), and the scan must stop
+            % at the first non-negligible entry, otherwise rows with a
+            % surviving spike would be dropped from the active window.
+            T0 = tic;
             for i = win:-1:1
                 if abs(spike(i)) <= rtol * abs(D(i))
                     spike(i) = 0;
                     whi = whi - 1;
+                else
+                    break
                 end
             end
             H(wlo:ihi, sp) = spike;
@@ -104,12 +122,13 @@ while ihi > 1
             shifts = shifts(end:-1:1);
 
             % Hessenberg reduction
-            T0 = tic;
             [U, H(sp:ihi, sp:ihi)] = hessq(H(sp:ihi, sp:ihi));
+            AED_time = AED_time + toc(T0);
+
+            T0 = tic;
             Q(:, sp:ihi) = Q(:, sp:ihi) * U;
             Q_time = Q_time + toc(T0);
 
-            AED_time = AED_time + toc(T0);
             DA = DA + win - numel(shifts);
         else
         %% case 2: Wilkinson shift
@@ -173,7 +192,7 @@ while ihi > 1
                     Q(:, i) = Q(:, i) * U;
                     H(:, i) = H(:, i) * U;
                     H(i, :) = U' * H(i, :);
-                    H(i+1, i) = 0;
+                    H(i+1, i) = 0; H(i, i+1) = 0;
                     ilo = i + 1;
                 end
             end
@@ -185,7 +204,7 @@ while ihi > 1
             Q(:, ihi) = Q(:, ihi) * U;
             H(:, ihi) = H(:, ihi) * U;
             H(ihi, :) = U' * H(ihi, :);
-            H(ihi, ihi-1) = 0;
+            H(ihi, ihi-1) = 0; H(ihi-1, ihi) = 0;
             ihi = ihi - 1;
             if progress_bar
                 waitbar(1 - ihi / n, b);

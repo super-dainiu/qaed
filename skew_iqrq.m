@@ -44,9 +44,17 @@ if ~istridiagonal(H)
 end
 
 % Set defaults
-if nargin < 4, progress_bar = false; end  
+if nargin < 4, progress_bar = false; end
 if nargin < 3, verbose = false; end
 if nargin < 2, rtol = eps; end
+
+% Dispatch to the C++ core when available (see qaed_accel).
+if qaed_accel()
+    Tz = tic;
+    [Q, D] = skew_iqrq_cpp(H, rtol, verbose, progress_bar);
+    if verbose, fprintf('skew_iqrq (C++ core): n = %d, %f s\n', size(H, 1), toc(Tz)); end
+    return
+end
 
 % Helper functions
 householder_lapply = @(u, x) x - u * (u' * x);
@@ -120,7 +128,7 @@ while ihi > 1
                 Q(:, i) = Q(:, i) * U;
                 H(:, i) = H(:, i) * U;
                 H(i, :) = U' * H(i, :);
-                H(i+1, i) = 0;
+                H(i+1, i) = 0; H(i, i+1) = 0;
                 ilo = i + 1;
             end
         end
@@ -131,7 +139,7 @@ while ihi > 1
             Q(:, ihi) = Q(:, ihi) * U;
             H(:, ihi) = H(:, ihi) * U;
             H(ihi, :) = U' * H(ihi, :);
-            H(ihi, ihi-1) = 0;
+            H(ihi, ihi-1) = 0; H(ihi-1, ihi) = 0;
             ihi = ihi - 1;
             if progress_bar
                 waitbar(1 - ihi / n, b);
