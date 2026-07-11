@@ -39,6 +39,54 @@ inline void standardize_diag(QMat& H, QMat& Q, int i) {
 }
 
 // ---------------------------------------------------------------------------
+// qr_sweep: one implicit-shift QR sweep on the active block [ilo, ihi] with
+// shift class x (standardized complex eigenvalue). Mirrors the reference
+// sweep (bulge introduction + chase with immediate updates); shared by iqrq
+// and aedq. Updates ilo in place on mid-sweep deflations.
+// ---------------------------------------------------------------------------
+inline void qr_sweep(QMat& H, QMat& Q, const Quat& x, int& ilo, int ihi,
+                     double atol, double rtol) {
+    const int n = H.cols();
+    const double si = -2.0 * x.w;
+    const double ti = x.norm2();
+    std::vector<Quat> a, u;
+    Quat zeta;
+
+    a.assign(3, Quat::zero());
+    a[0] = H(ilo, ilo) * H(ilo, ilo) + H(ilo, ilo + 1) * H(ilo + 1, ilo)
+         + si * H(ilo, ilo) + Quat(ti);
+    a[1] = H(ilo + 1, ilo) * H(ilo, ilo) + H(ilo + 1, ilo + 1) * H(ilo + 1, ilo)
+         + si * H(ilo + 1, ilo);
+    a[2] = H(ilo + 2, ilo + 1) * H(ilo + 1, ilo);
+
+    householder_vector(a, u, zeta);
+    householder_lapply(H, u, ilo, ilo + 2, ilo, n);
+    householder_rapply(H, u, 1, ihi, ilo, ilo + 2);
+    householder_rapply(Q, u, 1, Q.rows(), ilo, ilo + 2);
+
+    for (int i = ilo; i <= ihi - 2; ++i) {
+        const int e = std::min(i + 3, ihi);
+        const int sp = std::max(i - 1, ilo);
+
+        a.assign(e - i, Quat::zero());
+        for (int k = i + 1; k <= e; ++k) a[k - i - 1] = H(k, i);
+        householder_vector(a, u, zeta);
+
+        householder_lapply(H, u, i + 1, e, sp, n);
+        householder_rapply(H, u, 1, ihi, i + 1, e);
+        for (int k = i + 2; k <= e; ++k) H(k, i) = Quat::zero();
+        householder_rapply(Q, u, 1, Q.rows(), i + 1, e);
+
+        double sub = H(i + 1, i).abs();
+        if (sub <= atol && sub <= rtol * (H(i, i).abs() + H(i + 1, i + 1).abs())) {
+            standardize_diag(H, Q, i);
+            H(i + 1, i) = Quat::zero();
+            ilo = i + 1;
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
 // iqrq: implicit quaternion QR on a Hessenberg matrix. Q' * H0 * Q = T.
 // ---------------------------------------------------------------------------
 struct IqrStats { long steps = 0; };
@@ -48,48 +96,13 @@ inline void iqrq(QMat H, double rtol, QMat& Q, QMat& T, IqrStats* stats = nullpt
     int ilo = 1, ihi = n;
     const double atol = rtol * H.norm_fro();
     Q = QMat::eye(n);
-    std::vector<Quat> a, u;
-    Quat zeta;
     long GS = 0;
 
     while (ihi >= 1) {
         while (ihi - ilo > 1) {
             Quat x = shift2(H.block(ihi - 1, ihi, ihi - 1, ihi));
             ++GS;
-            double si = -2.0 * x.w;
-            double ti = x.norm2();
-            a.assign(3, Quat::zero());
-            a[0] = H(ilo, ilo) * H(ilo, ilo) + H(ilo, ilo + 1) * H(ilo + 1, ilo)
-                 + si * H(ilo, ilo) + Quat(ti);
-            a[1] = H(ilo + 1, ilo) * H(ilo, ilo) + H(ilo + 1, ilo + 1) * H(ilo + 1, ilo)
-                 + si * H(ilo + 1, ilo);
-            a[2] = H(ilo + 2, ilo + 1) * H(ilo + 1, ilo);
-
-            householder_vector(a, u, zeta);
-            householder_lapply(H, u, ilo, ilo + 2, ilo, n);
-            householder_rapply(H, u, 1, ihi, ilo, ilo + 2);
-            householder_rapply(Q, u, 1, n, ilo, ilo + 2);
-
-            for (int i = ilo; i <= ihi - 2; ++i) {
-                int e = std::min(i + 3, ihi);
-                int sp = std::max(i - 1, ilo);
-
-                a.assign(e - i, Quat::zero());
-                for (int k = i + 1; k <= e; ++k) a[k - i - 1] = H(k, i);
-                householder_vector(a, u, zeta);
-
-                householder_lapply(H, u, i + 1, e, sp, n);
-                householder_rapply(H, u, 1, ihi, i + 1, e);
-                for (int k = i + 2; k <= e; ++k) H(k, i) = Quat::zero();
-                householder_rapply(Q, u, 1, n, i + 1, e);
-
-                double sub = H(i + 1, i).abs();
-                if (sub <= atol && sub <= rtol * (H(i, i).abs() + H(i + 1, i + 1).abs())) {
-                    standardize_diag(H, Q, i);
-                    H(i + 1, i) = Quat::zero();
-                    ilo = i + 1;
-                }
-            }
+            qr_sweep(H, Q, x, ilo, ihi, atol, rtol);
 
             while (H(ihi, ihi - 1).abs() <= rtol * (H(ihi, ihi).abs() + H(ihi - 1, ihi - 1).abs())) {
                 standardize_diag(H, Q, ihi);
@@ -184,8 +197,7 @@ inline void aedq(QMat H, double rtol, QMat& Q, QMat& T, double alpha = 0.25,
     int ilo = 1, ihi = n;
     const double atol = rtol * H.norm_fro();
     Q = QMat::eye(n);
-    std::vector<Quat> a, u, shifts;
-    Quat zeta;
+    std::vector<Quat> shifts;
     long GS = 0, DA = 0;
 
     while (ihi >= 1) {
@@ -217,41 +229,7 @@ inline void aedq(QMat H, double rtol, QMat& Q, QMat& T, double alpha = 0.25,
             while (ihi > ilo + 1 && LS < NS) {
                 ++GS;
                 ++LS;
-                Quat x = shifts[LS - 1];
-                double si = -2.0 * x.w;
-                double ti = x.norm2();
-                a.assign(3, Quat::zero());
-                a[0] = H(ilo, ilo) * H(ilo, ilo) + H(ilo, ilo + 1) * H(ilo + 1, ilo)
-                     + si * H(ilo, ilo) + Quat(ti);
-                a[1] = H(ilo + 1, ilo) * H(ilo, ilo) + H(ilo + 1, ilo + 1) * H(ilo + 1, ilo)
-                     + si * H(ilo + 1, ilo);
-                a[2] = H(ilo + 2, ilo + 1) * H(ilo + 1, ilo);
-
-                householder_vector(a, u, zeta);
-                householder_lapply(H, u, ilo, ilo + 2, ilo, n);
-                householder_rapply(H, u, 1, ihi, ilo, ilo + 2);
-                householder_rapply(Q, u, 1, n, ilo, ilo + 2);
-
-                for (int i = ilo; i <= ihi - 2; ++i) {
-                    int e = std::min(i + 3, ihi);
-                    int s2 = std::max(i - 1, ilo);
-
-                    a.assign(e - i, Quat::zero());
-                    for (int k = i + 1; k <= e; ++k) a[k - i - 1] = H(k, i);
-                    householder_vector(a, u, zeta);
-
-                    householder_lapply(H, u, i + 1, e, s2, n);
-                    householder_rapply(H, u, 1, ihi, i + 1, e);
-                    for (int k = i + 2; k <= e; ++k) H(k, i) = Quat::zero();
-                    householder_rapply(Q, u, 1, n, i + 1, e);
-
-                    double sub = H(i + 1, i).abs();
-                    if (sub <= atol && sub <= rtol * (H(i, i).abs() + H(i + 1, i + 1).abs())) {
-                        standardize_diag(H, Q, i);
-                        H(i + 1, i) = Quat::zero();
-                        ilo = i + 1;
-                    }
-                }
+                qr_sweep(H, Q, shifts[LS - 1], ilo, ihi, atol, rtol);
 
                 while (H(ihi, ihi - 1).abs() <= rtol * (H(ihi, ihi).abs() + H(ihi - 1, ihi - 1).abs())) {
                     standardize_diag(H, Q, ihi);

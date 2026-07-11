@@ -364,7 +364,12 @@ inline Quat swapq(const QMat& T, QMat& U) {
     return x;
 }
 
-// shift: Wilkinson-like shift from trailing 2x2 block (mirrors MATLAB shift()).
+// shift: Wilkinson-like shift from trailing 2x2 block (mirrors MATLAB
+// shift()): the standardized eigenvalue closest to the standardized (2,2)
+// entry. Note the quaternion implicit shift already targets the whole
+// similarity class {w +- |v| i}, i.e. it is the analog of the Francis
+// double shift; using the second (farther) class as an extra consecutive
+// shift was measured to slow convergence (+15% sweeps at n=512).
 inline Quat shift2(const QMat& A) {
     Quat u1, T1;
     schur1(A(2, 2), u1, T1);
