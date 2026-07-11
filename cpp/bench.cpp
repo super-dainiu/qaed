@@ -2,11 +2,8 @@
 //
 // Usage:
 //   ./qaed_bench --alg aed|iqr|eig|hess --n 256 [--seed 0] [--rtol 2.2e-16]
-//                [--alpha 0.25] [--load file.qmat] [--save-out prefix]
+//                [--alpha 0.25]
 //   ./qaed_bench --selftest
-//
-// Binary .qmat format: int64 m, int64 n, then 4 column-major double arrays
-// (w, x, y, z), m*n each. See scripts/save_qmat.m / load_qmat.m.
 #include "qaed.hpp"
 #include <chrono>
 #include <cstring>
@@ -33,40 +30,6 @@ static QMat rand_qmat(int n, unsigned seed) {
             A(i, j) = q * N(gen);
         }
     return A;
-}
-
-static bool save_qmat(const std::string& path, const QMat& A) {
-    FILE* f = fopen(path.c_str(), "wb");
-    if (!f) return false;
-    int64_t m = A.rows(), n = A.cols();
-    fwrite(&m, 8, 1, f); fwrite(&n, 8, 1, f);
-    size_t sz = static_cast<size_t>(m) * n;
-    std::vector<double> buf(sz);
-    auto dump = [&](double Quat::*p) {
-        for (size_t t = 0; t < sz; ++t) buf[t] = A.data()[t].*p;
-        fwrite(buf.data(), 8, sz, f);
-    };
-    dump(&Quat::w); dump(&Quat::x); dump(&Quat::y); dump(&Quat::z);
-    fclose(f);
-    return true;
-}
-
-static bool load_qmat(const std::string& path, QMat& A) {
-    FILE* f = fopen(path.c_str(), "rb");
-    if (!f) return false;
-    int64_t m = 0, n = 0;
-    if (fread(&m, 8, 1, f) != 1 || fread(&n, 8, 1, f) != 1) { fclose(f); return false; }
-    A = QMat(static_cast<int>(m), static_cast<int>(n));
-    size_t sz = static_cast<size_t>(m) * n;
-    std::vector<double> buf(sz);
-    auto slurp = [&](double Quat::*p) {
-        if (fread(buf.data(), 8, sz, f) != sz) return false;
-        for (size_t t = 0; t < sz; ++t) A.data()[t].*p = buf[t];
-        return true;
-    };
-    bool ok = slurp(&Quat::w) && slurp(&Quat::x) && slurp(&Quat::y) && slurp(&Quat::z);
-    fclose(f);
-    return ok;
 }
 
 // ---- verification helpers -------------------------------------------------
@@ -208,7 +171,7 @@ static int selftest() {
 }
 
 int main(int argc, char** argv) {
-    std::string alg = "aed", load, save_out;
+    std::string alg = "aed";
     int n = 256;
     unsigned seed = 0;
     double rtol = 2.220446049250313e-16, alpha = 0.25;
@@ -221,21 +184,12 @@ int main(int argc, char** argv) {
         else if (!strcmp(argv[i], "--seed")) seed = static_cast<unsigned>(atoi(next()));
         else if (!strcmp(argv[i], "--rtol")) rtol = atof(next());
         else if (!strcmp(argv[i], "--alpha")) alpha = atof(next());
-        else if (!strcmp(argv[i], "--load")) load = next();
-        else if (!strcmp(argv[i], "--save-out")) save_out = next();
         else if (!strcmp(argv[i], "--selftest")) do_selftest = true;
         else { fprintf(stderr, "unknown arg: %s\n", argv[i]); return 2; }
     }
     if (do_selftest) return selftest();
 
-    QMat A;
-    if (!load.empty()) {
-        if (!load_qmat(load, A)) { fprintf(stderr, "cannot read %s\n", load.c_str()); return 2; }
-        n = A.rows();
-        printf("loaded %s, n = %d\n", load.c_str(), n);
-    } else {
-        A = rand_qmat(n, seed);
-    }
+    QMat A = rand_qmat(n, seed);
 
     printf("alg = %s, n = %d, rtol = %.3e\n", alg.c_str(), n, rtol);
 
@@ -282,11 +236,5 @@ int main(int argc, char** argv) {
     printf("residual  ||Q'HQ - T||/||H||       = %.3e\n", schur_residual(H, Q, T));
     printf("lower mass ||tril(T,-1)||/||T||    = %.3e\n", lower_mass(T, -1));
 
-    if (!save_out.empty()) {
-        save_qmat(save_out + "_H.qmat", H);
-        save_qmat(save_out + "_Q.qmat", Q);
-        save_qmat(save_out + "_T.qmat", T);
-        printf("saved %s_{H,Q,T}.qmat\n", save_out.c_str());
-    }
     return 0;
 }

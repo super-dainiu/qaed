@@ -6,7 +6,6 @@ scripts/*.pdf
 cpp/qaed_bench
 cpp/*.mex*
 cpp/*.o
-*.qmat
 cpp_bench*.txt
 mex_check*.txt
 cpp/*.log

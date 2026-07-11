@@ -42,11 +42,10 @@ module load GCCcore/13.3.0
 make            # links FlexiBLAS (-l:libflexiblas.so.3)
 ./qaed_bench --selftest
 ./qaed_bench --alg aed --n 512            # random matrix benchmark
-./qaed_bench --alg aed --load H.qmat --save-out out   # cross-check with MATLAB
 ```
 
-`.qmat` is a raw binary format (int64 m, n; then w,x,y,z column-major doubles);
-`scripts/save_qmat.m` / `scripts/load_qmat.m` convert to/from qtfm quaternions.
+Cross-checking against MATLAB goes through the MEX gateway
+(`test_cpp_vs_matlab.m`), not through files.
 
 ## Build (MEX) and MATLAB comparison
 
