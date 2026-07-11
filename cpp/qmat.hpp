@@ -98,9 +98,45 @@ private:
 };
 
 // ---------------------------------------------------------------------------
-// Quaternion GEMM: C = A * B via 4 complex GEMMs on the split A = A1 + A2*j.
-// (A1+A2 j)(B1+B2 j) = (A1 B1 - A2 conj(B2)) + (A1 B2 + A2 conj(B1)) j
+// Quaternion GEMM (native quaternion arithmetic).
+//
+// C = A * B computed directly with the quaternion multiplication rules on a
+// column-major gaxpy kernel: C(:,j) += A(:,l) * B(l,j). No mapping to
+// complex/real BLAS - this is the "qBLAS" building block of the library.
 // ---------------------------------------------------------------------------
+inline QMat qgemm(const QMat& A, const QMat& B) {
+    const int m = A.rows(), k = A.cols(), n = B.cols();
+    assert(B.rows() == k);
+    QMat C(m, n);
+    static_assert(sizeof(Quat) == 4 * sizeof(double), "Quat must be 4 packed doubles");
+#pragma omp parallel for schedule(static) if (static_cast<long>(m) * n * k > 32768)
+    for (int j = 1; j <= n; ++j) {
+        double* cj = reinterpret_cast<double*>(&C(1, j));
+        for (int l = 1; l <= k; ++l) {
+            const Quat b = B(l, j);
+            if (b.w == 0.0 && b.x == 0.0 && b.y == 0.0 && b.z == 0.0) continue;
+            // a*b = a.w*t0 + a.x*t1 + a.y*t2 + a.z*t3 (sign-permuted b vectors
+            // hoisted out of the i-loop; the 4-lane inner loop vectorizes).
+            const double t0[4] = { b.w,  b.x,  b.y,  b.z};
+            const double t1[4] = {-b.x,  b.w, -b.z,  b.y};
+            const double t2[4] = {-b.y,  b.z,  b.w, -b.x};
+            const double t3[4] = {-b.z, -b.y,  b.x,  b.w};
+            const double* al = reinterpret_cast<const double*>(&A(1, l));
+            for (int i = 0; i < m; ++i) {
+                const double aw = al[4*i], ax = al[4*i+1], ay = al[4*i+2], az = al[4*i+3];
+                for (int p = 0; p < 4; ++p)
+                    cj[4*i + p] += aw * t0[p] + ax * t1[p] + ay * t2[p] + az * t3[p];
+            }
+        }
+    }
+    return C;
+}
+
+#ifdef QAED_COMPLEX_GEMM
+// Reference/benchmark-only variant: 4 complex GEMMs on the split
+// A = A1 + A2*j. Not used by default - kept to quantify what mapping to
+// complex BLAS would buy. (A1+A2 j)(B1+B2 j) =
+// (A1 B1 - A2 conj(B2)) + (A1 B2 + A2 conj(B1)) j
 inline QMat qmul(const QMat& A, const QMat& B) {
     const blas_int m = A.rows(), k = A.cols(), n = B.cols();
     assert(B.rows() == static_cast<int>(k));
@@ -131,6 +167,9 @@ inline QMat qmul(const QMat& A, const QMat& B) {
     for (size_t t = 0; t < C1.size(); ++t) c[t] = from_c(C1[t], C2[t]);
     return C;
 }
+#else
+inline QMat qmul(const QMat& A, const QMat& B) { return qgemm(A, B); }
+#endif
 
 // In-place block updates: X(r1:r2, c1:c2) = X(r1:r2, c1:c2) * U  and  U' * X.
 // Small U is applied with direct scalar loops (zgemm overhead dominates there).

@@ -5,15 +5,25 @@ line-by-line translation of the MATLAB reference. The MATLAB front-end is
 unchanged; use the `*_cpp.m` drop-in wrappers in the repo root to dispatch to
 this core.
 
+All computation is native quaternion arithmetic ("quaternion BLAS"): the
+scalar type is `Quat` (4 doubles) with direct quaternion multiplication, and
+matrix products use the hand-written `qgemm` kernel (column-major gaxpy with
+hoisted sign-permuted vectors, OpenMP over columns). Nothing is mapped to
+complex or real BLAS. The only complex computation is the 4x4 complex adjoint
+eigenproblem inside `schur2` (2x2 quaternion blocks), which is exactly what
+the MATLAB reference does via `schur(adjoint(A))`. A complex-split GEMM
+variant exists behind `-DQAED_COMPLEX_GEMM` for benchmark comparison only.
+`qmtimes.m` exposes `qgemm` to MATLAB.
+
 ## Files
 
 - `quat.hpp` — quaternion scalar; closed-form `schur1` (standardization
   `u' q u = w + |v| i`) and the scalar Sylvester solver `sylvesterc`.
-- `qmat.hpp` — column-major quaternion matrix; quaternion GEMM via 4 complex
-  `zgemm` on the split `A = A1 + A2 j`; Householder kernels
-  (qtfm-compatible `householder_vector` with `v = e1`); `schur2` (2×2 ordered
-  quaternion Schur via `zgeev` on the 4×4 complex adjoint + quaternion
-  Householder), `swapq`, `ordschurq`, `shift2`.
+- `qmat.hpp` — column-major quaternion matrix; native quaternion GEMM
+  (`qgemm`); Householder kernels (qtfm-compatible `householder_vector` with
+  `v = e1`); `schur2` (2×2 ordered quaternion Schur via `zgeev` on the 4×4
+  complex adjoint, mirroring the MATLAB reference, + quaternion Householder),
+  `swapq`, `ordschurq`, `shift2`.
 - `qaed.hpp` — `hessq`, `iqrq`, `aedq` (+AED window step), `sylvesterc_tri`,
   `eigvec`, `eigq`. Same control flow, deflation criteria and shift selection
   as the .m files.
