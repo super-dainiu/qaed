@@ -1,0 +1,31 @@
+--- a/qtfm/@quaternion/eig.m
++++ b/qtfm/@quaternion/eig.m
+@@ -72,11 +72,23 @@
+ 
+     [P, B] = tridiagonalize(A);
+ else
+-    
+-    % For a general (i.e. non Hermitian) matrix, we don't currently have a method to
+-    % convert A to a real matrix. The only feasible approach is to use an adjoint
+-    % matrix, but we leave this to the user.
+-    
++
++    % QAED patch: general (non-Hermitian) real quaternion matrices are
++    % handled by the qaed Hessenberg-QR solver (C++ accelerated when
++    % qaed_mex is on the path, see qaed_accel). Right eigenvalues are
++    % returned as their standardized complex representatives w + |v|*i.
++
++    if exist('eigq', 'file') == 2 && isreal(A)
++        if nargout < 2
++            V = eigq(A);
++        else
++            [V, D] = eigq(A);
++        end
++        return
++    end
++
++    % Fallback: original QTFM behaviour when qaed is not on the path.
++
+     disp('The eig function is not implemented for non-Hermitian quaternion matrices.');
+     disp('Eigenvalues and eigenvectors can be computed by using the standard Matlab');
+     disp('eig function on an adjoint matrix by using the function adjoint() (q.v.).');

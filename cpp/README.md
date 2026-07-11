@@ -2,8 +2,8 @@
 
 C++ port of the hot path of qaed (`hessq → iqrq / aedq → eigvec`), a faithful
 line-by-line translation of the MATLAB reference. The MATLAB front-end is
-unchanged; use the `*_cpp.m` drop-in wrappers in the repo root to dispatch to
-this core.
+unchanged; each function in `matlab/` dispatches here transparently when the
+mex file is built (`qaed_accel(false)` forces the pure-MATLAB path).
 
 All computation is native quaternion arithmetic ("quaternion BLAS"): the
 scalar type is `Quat` (4 doubles) with direct quaternion multiplication, and
@@ -13,7 +13,6 @@ complex or real BLAS. The only complex computation is the 4x4 complex adjoint
 eigenproblem inside `schur2` (2x2 quaternion blocks), which is exactly what
 the MATLAB reference does via `schur(adjoint(A))`. A complex-split GEMM
 variant exists behind `-DQAED_COMPLEX_GEMM` for benchmark comparison only.
-`qmtimes.m` exposes `qgemm` to MATLAB.
 
 ## Files
 
@@ -28,12 +27,7 @@ variant exists behind `-DQAED_COMPLEX_GEMM` for benchmark comparison only.
   `eigvec`, `eigq`. Same control flow, deflation criteria and shift selection
   as the .m files.
 - `bench.cpp` — standalone benchmark / self-test driver (no MATLAB needed).
-- `qaed_mex.cpp` — MEX gateway used by `hessq_cpp / iqrq_cpp / aedq_cpp /
-  eigq_cpp`.
-
-Not yet ported: the skew/tridiagonal specializations (`skew_iqrq`,
-`skew_aedq`). `eigq_cpp` handles those inputs through the general path
-(correct, just not specialized).
+- `qaed_mex.cpp` — MEX gateway used by the dispatch in `matlab/`.
 
 ## Build & run (standalone)
 

@@ -55,18 +55,6 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[]) {
     mxGetString(prhs[0], modebuf, sizeof modebuf);
     std::string mode(modebuf);
 
-    if (mode == "gemm") {
-        // [Cw..Cz] = qaed_mex('gemm', Aw..Az, Bw..Bz) - quaternion BLAS GEMM
-        if (nrhs < 9)
-            mexErrMsgIdAndTxt("qaed:usage", "gemm mode needs 8 component arrays");
-        const QMat A = unpack(prhs[1], prhs[2], prhs[3], prhs[4]);
-        const QMat B = unpack(prhs[5], prhs[6], prhs[7], prhs[8]);
-        if (A.cols() != B.rows())
-            mexErrMsgIdAndTxt("qaed:input", "inner dimensions must agree");
-        pack(plhs, 0, qgemm(A, B));
-        return;
-    }
-
     if (mode == "eigvec") {
         // [Pw..Pz, Dw..Dz] = qaed_mex('eigvec', Qw..Qz, Tw..Tz)
         if (nrhs < 9)
@@ -117,13 +105,9 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[]) {
             iqrq(H, rtol, Q, T);
         } else if (mode == "aed") {
             aedq(H, rtol, Q, T, alpha);
-        } else if (mode == "eig") {
-            std::vector<Quat> D;
-            eigq(H, rtol, Q, D);
-            T = QMat(static_cast<int>(D.size()), 1);
-            for (int i = 1; i <= T.rows(); ++i) T(i, 1) = D[i - 1];
         } else {
-            mexErrMsgIdAndTxt("qaed:mode", "mode must be hess|iqr|aed|eig");
+            mexErrMsgIdAndTxt("qaed:mode",
+                              "mode must be hess|iqr|aed|eigvec|skew_iqr|skew_aed");
         }
         pack(plhs, 0, Q);
         if (nlhs > 4) pack(plhs, 4, T);

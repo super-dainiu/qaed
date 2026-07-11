@@ -22,4 +22,4 @@ export LD_PRELOAD=/usr/lib64/libstdc++.so.6
 matlab -nodisplay -nosplash -nodesktop -batch "\
 mex('-R2018a','-DQAED_ILP64','CXXFLAGS=\$CXXFLAGS -O3 -std=c++17 -fopenmp','LDFLAGS=\$LDFLAGS -fopenmp','qaed_mex.cpp','-lmwlapack','-lmwblas'); \
 disp('mex build ok'); \
-run('$ROOT/test_cpp_vs_matlab.m');"
+run('$ROOT/tests/test_cpp_vs_matlab.m');"
