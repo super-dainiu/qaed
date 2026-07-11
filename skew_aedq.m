@@ -224,8 +224,11 @@ end
 
 % Helper functions
 function y = istridiagonal(A)
-% Returns true if A is tridiagonal
-y = normq(tril(A, -2)) / normq(A) < eps & normq(triu(A, 2)) / normq(A) < eps;
+% Returns true if A is tridiagonal (relative Frobenius mass of the parts
+% outside the tridiagonal band). NB: qtfm's normq is elementwise, so the
+% previous normq(...)/normq(A) was a matrix mrdivide, not a scalar ratio.
+nA = norm(A, 'fro');
+y = norm(tril(A, -2), 'fro') / nA < eps && norm(triu(A, 2), 'fro') / nA < eps;
 end
 
 function s = shift(A)
