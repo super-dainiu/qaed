@@ -6,7 +6,6 @@
 #SBATCH --cpus-per-task=4
 #SBATCH --mem-per-cpu=5G
 #SBATCH --partition=week
-#SBATCH --constraint=cpumodel:8562Y+
 module purge
 module load MATLAB/2023b
 
