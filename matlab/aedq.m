@@ -219,13 +219,6 @@ function y = isHessenberg(A)
 y = all(abs(tril(A, -2)) < eps); 
 end
 
-end
-
-
-
-% Assign group number to the first element
-group(idx(1)) = 1;
-end
 
 function [Q, H, shifts] = aed_step(H, rtol)
 % AED_STEP Aggressive Early Deflation step

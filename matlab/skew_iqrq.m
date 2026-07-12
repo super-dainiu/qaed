@@ -181,13 +181,6 @@ function y = istridiagonal(A)
 % previous normq(...)/normq(A) was a matrix mrdivide, not a scalar ratio.
 nA = norm(A, 'fro');
 y = norm(tril(A, -2), 'fro') / nA < eps && norm(triu(A, 2), 'fro') / nA < eps;
-end
-
-
-
-% Assign group number to the first element
-group(idx(1)) = 1;
-end
 
 end
 

@@ -249,13 +249,6 @@ nA = norm(A, 'fro');
 y = norm(tril(A, -2), 'fro') / nA < eps && norm(triu(A, 2), 'fro') / nA < eps;
 end
 
-end
-
-
-
-% Assign group number to the first element
-group(idx(1)) = 1;
-end
 
 function NS = aed_num_shifts(ihi)
 if ihi < 30

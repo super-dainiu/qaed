@@ -173,16 +173,6 @@ y = all(abs(tril(A, -2)) < eps);
 end
 
 
-end
-
-
-
-
-
-
-% Assign group number to the first element
-group(idx(1)) = 1;
-end
 
 function [Q, T] = iqrq_cpp(H, rtol)
 % IQRQ_CPP Dispatch IQRQ to the C++ core (cpp/qaed_mex).
