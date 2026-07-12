@@ -12,3 +12,4 @@ cpp/*.log
 paper_bench*.txt
 skew_bench*.txt
 /qtfm/
+appendix_bench*.txt
