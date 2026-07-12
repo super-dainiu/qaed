@@ -151,8 +151,20 @@ inline void iqrq(QMat H, double rtol, QMat& Q, QMat& T, IqrStats* stats = nullpt
 // aedq: implicit QR with aggressive early deflation. Q' * H0 * Q = T.
 // ---------------------------------------------------------------------------
 namespace detail {
-inline int aed_num_shifts(int ihi, double alpha) {
-    return std::max(2, static_cast<int>(std::lround(alpha * ihi)));
+// Number of shifts per AED round, following LAPACK's IPARMQ (dlaqr0).
+// The previous alpha*n sizing made the AED window a fixed fraction of the
+// matrix, whose O(w^3) cost cancelled the sweep savings at large n.
+inline int aed_num_shifts(int m, double /*alpha: deprecated, unused*/) {
+    int NS;
+    if (m < 30) NS = 2;
+    else if (m < 60) NS = 4;
+    else if (m < 150) NS = 10;
+    else if (m < 590) NS = std::max(10L, std::lround(static_cast<double>(m) /
+                                    std::lround(std::log2(static_cast<double>(m)))));
+    else if (m < 3000) NS = 64;
+    else if (m < 6000) NS = 128;
+    else NS = 256;
+    return std::max(2, NS - NS % 2);
 }
 inline int aed_win_size(int ihi, int NS) {
     int WS = (ihi <= 500) ? NS : (3 * NS) / 2;

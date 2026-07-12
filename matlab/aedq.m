@@ -257,8 +257,26 @@ H(1:ihi, ihi+1:n) = U' * H(1:ihi, ihi+1:n);
 Q( :   ,   1:ihi) = Q( :   ,    1:ihi) * U;
 end
 
-function NS = aed_num_shifts(ihi, alpha)
-NS = max(2, round(alpha * ihi));
+function NS = aed_num_shifts(ihi, alpha) %#ok<INUSD>
+% Number of shifts per AED round, following LAPACK's IPARMQ (ALPHA is
+% deprecated: the previous alpha*n sizing made the AED window a fixed
+% fraction of the matrix, whose cost cancelled the sweep savings).
+if ihi < 30
+    NS = 2;
+elseif ihi < 60
+    NS = 4;
+elseif ihi < 150
+    NS = 10;
+elseif ihi < 590
+    NS = max(10, round(ihi / round(log2(ihi))));
+elseif ihi < 3000
+    NS = 64;
+elseif ihi < 6000
+    NS = 128;
+else
+    NS = 256;
+end
+NS = max(2, NS - mod(NS, 2));
 end
 
 
