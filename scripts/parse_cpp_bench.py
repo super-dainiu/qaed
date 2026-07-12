@@ -14,18 +14,20 @@ def sci(x):
     return f"$%.2f\\times10^{{%d}}$" % (m, e)
 
 
-def main(path):
-    runs = []
+def parse(path, runs):
+    """Append one dict per '=====' section found in path. A trailing 'rep=N'
+    marks a repeated timing run (best-of-N); the deterministic fields are
+    identical across reps and the caller takes the min over 'time'/'q'/'aed'."""
     cur = None
     for line in open(path):
-        m = re.match(r"===== type=(\w+) n=(\d+) (\w+) =====", line)
+        m = re.match(r"===== type=(\w+) n=(\d+) (\w+)(?: rep=\d+)? =====", line)
         if m:
             cur = {"type": m.group(1), "n": int(m.group(2)), "alg": m.group(3)}
             runs.append(cur)
             continue
         if cur is None:
             continue
-        m = re.search(r"(aedq|iqrq) time: ([\d.]+) s \(QR steps: (\d+)", line)
+        m = re.search(r"(aedq|iqrq|skew_aed|skew_iqr) time: ([\d.]+) s \(QR steps: (\d+)", line)
         if m:
             cur["time"] = float(m.group(2))
             cur["steps"] = int(m.group(3))
@@ -43,8 +45,29 @@ def main(path):
         if m:
             cur["e3"] = float(m.group(1))
 
+
+def best(sel):
+    """Collapse repeated (type, n, alg) runs to one dict with min timing."""
+    out = {}
+    for r in sel:
+        k = (r["type"], r["n"], r["alg"])
+        if k not in out:
+            out[k] = dict(r)
+        else:
+            o = out[k]
+            for f in ("time", "q", "aed"):
+                if r.get(f) is not None and (o.get(f) is None or r[f] < o[f]):
+                    o[f] = r[f]
+    return list(out.values())
+
+
+def main(paths):
+    runs = []
+    for p in paths:
+        parse(p, runs)
+
     for typ in ["full", "hess", "skew"]:
-        sel = [r for r in runs if r["type"] == typ and "time" in r]
+        sel = best([r for r in runs if r["type"] == typ and "time" in r])
         if not sel:
             continue
         algs = [("aed", "QR+AED"), ("iqr", "QR")]
@@ -71,4 +94,4 @@ def main(path):
 
 
 if __name__ == "__main__":
-    main(sys.argv[1] if len(sys.argv) > 1 else "paper_bench.txt")
+    main(sys.argv[1:] if len(sys.argv) > 1 else ["paper_bench.txt"])
